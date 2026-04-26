@@ -28,14 +28,14 @@ export default function LobbyScreen({ navigation }: any) {
     }
     setLoading(true);
     try {
-      const roomId = await createRoom({
+      const { roomId, roomCode } = await createRoom({
         hostId: userId,
         hostName: playerName,
         genre: 'afrobeats',
         difficulty: 'medium',
         avatar: '🎵',
       });
-      navigation.navigate('MultiRoom', { roomId, userId, playerName, isHost: true });
+      navigation.navigate('MultiRoom', { roomId, roomCode, userId, playerName, isHost: true });
     } catch (e) {
       Alert.alert('Error creating room');
     } finally {
@@ -51,8 +51,10 @@ export default function LobbyScreen({ navigation }: any) {
     setLoading(true);
     try {
       await joinRoom(roomCode.trim().toUpperCase(), userId, playerName, '🎧');
+      const enteredCode = roomCode.trim().toUpperCase();
       navigation.navigate('MultiRoom', {
-        roomId: roomCode.trim().toUpperCase(),
+        roomId: enteredCode,
+        roomCode: enteredCode,
         userId,
         playerName,
         isHost: false,

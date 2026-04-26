@@ -79,6 +79,7 @@ export const SPACING = {
   lg: 24,
   xl: 32,
   xxl: 48,
+  xxxl: 64,
 };
 
 export const RADIUS = {
@@ -87,6 +88,12 @@ export const RADIUS = {
   lg: 24,
   xl: 32,
   full: 999,
+};
+
+export const MOTION = {
+  fast: 180,
+  normal: 280,
+  slow: 420,
 };
 
 // ─── Genres ─────────────────────────────────────────────────────────────────

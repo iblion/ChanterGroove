@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
 import { getTopScores, LeaderboardEntry } from '../services/leaderboard';
@@ -8,6 +8,7 @@ const { width } = Dimensions.get('window');
 
 export default function LeaderboardScreen() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [modeFilter, setModeFilter] = useState<'all' | 'solo' | 'daily' | 'speed'>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,18 +31,33 @@ export default function LeaderboardScreen() {
     );
   }
 
+  const filteredEntries = entries.filter((entry) => modeFilter === 'all' || entry.mode === modeFilter);
+
   return (
     <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>🏆 Leaderboard</Text>
+        <View style={styles.filterRow}>
+          {(['all', 'solo', 'daily', 'speed'] as const).map((mode) => (
+            <TouchableOpacity
+              key={mode}
+              style={[styles.filterChip, modeFilter === mode && styles.filterChipActive]}
+              onPress={() => setModeFilter(mode)}
+            >
+              <Text style={[styles.filterChipText, modeFilter === mode && styles.filterChipTextActive]}>
+                {mode.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-        {entries.length === 0 ? (
+        {filteredEntries.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>🎵</Text>
             <Text style={styles.emptyText}>No scores yet. Play a game to be first!</Text>
           </View>
         ) : (
-          entries.map((entry, index) => {
+          filteredEntries.map((entry, index) => {
             const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : null;
             const isTop3 = index < 3;
 
@@ -82,6 +98,11 @@ const styles = StyleSheet.create({
   loadingText: { color: COLORS.textSecondary, marginTop: SPACING.md, fontSize: 14 },
   scroll: { padding: SPACING.lg, paddingTop: SPACING.xxl, paddingBottom: 40 },
   title: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary, marginBottom: SPACING.lg },
+  filterRow: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.md },
+  filterChip: { paddingHorizontal: SPACING.sm + 2, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.bgCardLight, backgroundColor: COLORS.bgCard },
+  filterChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '20' },
+  filterChipText: { color: COLORS.textSecondary, fontSize: 11, fontWeight: '700' },
+  filterChipTextActive: { color: COLORS.primary },
 
   row: {
     flexDirection: 'row',

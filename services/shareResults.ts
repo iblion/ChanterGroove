@@ -3,7 +3,7 @@ import { GameResult, DailyResult } from './storage';
 // ─── Generate Wordle-style emoji share text ────────────────────────────────
 
 export function generateShareText(options: {
-  mode: 'daily' | 'solo';
+  mode: 'daily' | 'solo' | 'multi' | 'speed';
   attempts: ('correct' | 'wrong' | 'skipped' | 'unused')[];
   won: boolean;
   score?: number;
@@ -28,6 +28,10 @@ export function generateShareText(options: {
 
   if (mode === 'daily') {
     lines.push(`🥁 ChanterGroove Daily${dailyNumber ? ` #${dailyNumber}` : ''}`);
+  } else if (mode === 'multi') {
+    lines.push('🥁 ChanterGroove Multiplayer');
+  } else if (mode === 'speed') {
+    lines.push('🥁 ChanterGroove Speed Round');
   } else {
     lines.push('🥁 ChanterGroove');
   }
@@ -53,7 +57,8 @@ export function generateShareText(options: {
   }
 
   lines.push('');
-  lines.push('#ChanterGroove #MusicTrivia');
+  lines.push('Play: ChanterGroove');
+  lines.push('#ChanterGroove #Afrobeats #MusicTrivia');
 
   return lines.join('\n');
 }

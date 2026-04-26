@@ -50,6 +50,8 @@ export interface UserStats {
   dailyStreak: number;
   dailyBestStreak: number;
   genreBreakdown: Record<string, { games: number; totalScore: number }>;
+  modeBreakdown: Record<string, { games: number; totalScore: number }>;
+  attemptDistribution: Record<string, number>;
   recentGames: GameResult[];
 }
 
@@ -111,6 +113,11 @@ export function getTodayKey(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+export function getTodayKeyUTC(): string {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
 export async function getDailyResults(): Promise<Record<string, DailyResult>> {
   try {
     const data = await AsyncStorage.getItem(KEYS.DAILY_RESULTS);
@@ -128,7 +135,7 @@ export async function saveDailyResult(result: DailyResult): Promise<void> {
 
 export async function getTodayResult(): Promise<DailyResult | null> {
   const results = await getDailyResults();
-  return results[getTodayKey()] || null;
+  return results[getTodayKeyUTC()] || results[getTodayKey()] || null;
 }
 
 export async function getDailyStreak(): Promise<number> {
@@ -187,10 +194,31 @@ export async function getStats(): Promise<UserStats> {
 
   // Genre breakdown
   const genreBreakdown: Record<string, { games: number; totalScore: number }> = {};
+  const modeBreakdown: Record<string, { games: number; totalScore: number }> = {};
+  const attemptDistribution: Record<string, number> = {
+    '1': 0,
+    '2': 0,
+    '3': 0,
+    '4': 0,
+    '5': 0,
+    '6': 0,
+    fail: 0,
+  };
   for (const game of history) {
     if (!genreBreakdown[game.genre]) genreBreakdown[game.genre] = { games: 0, totalScore: 0 };
     genreBreakdown[game.genre].games++;
     genreBreakdown[game.genre].totalScore += game.score;
+
+    if (!modeBreakdown[game.mode]) modeBreakdown[game.mode] = { games: 0, totalScore: 0 };
+    modeBreakdown[game.mode].games++;
+    modeBreakdown[game.mode].totalScore += game.score;
+
+    const firstCorrect = game.attempts.findIndex((a) => a === 'correct');
+    if (firstCorrect >= 0 && firstCorrect < 6) {
+      attemptDistribution[String(firstCorrect + 1)]++;
+    } else {
+      attemptDistribution.fail++;
+    }
   }
 
   return {
@@ -206,6 +234,8 @@ export async function getStats(): Promise<UserStats> {
     dailyStreak,
     dailyBestStreak,
     genreBreakdown,
+    modeBreakdown,
+    attemptDistribution,
     recentGames: history.slice(0, 10),
   };
 }

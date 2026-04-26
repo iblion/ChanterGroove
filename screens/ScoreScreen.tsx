@@ -7,6 +7,7 @@ import { checkAchievements, Achievement } from '../services/achievements';
 import { generateShareText } from '../services/shareResults';
 import { playAchievementSound } from '../services/sounds';
 import { submitScore } from '../services/leaderboard';
+import { updateScore } from '../services/multiplayer';
 import Confetti from '../components/Confetti';
 
 const { height } = Dimensions.get('window');
@@ -19,7 +20,17 @@ function getRank(score: number) {
 }
 
 export default function ScoreScreen({ navigation, route }: any) {
-  const { score, genre, difficulty, mode, totalRounds = 10, correctRounds = 0, roundResults = [] } = route.params;
+  const {
+    score,
+    genre,
+    difficulty,
+    mode,
+    roomId,
+    userId,
+    totalRounds = 10,
+    correctRounds = 0,
+    roundResults = [],
+  } = route.params;
   const rank       = getRank(score);
   const accuracy   = totalRounds > 0 ? Math.round((correctRounds / totalRounds) * 100) : 0;
   const bounceAnim = useRef(new Animated.Value(0)).current;
@@ -53,11 +64,14 @@ export default function ScoreScreen({ navigation, route }: any) {
       totalRounds,
       correctRounds,
       attempts: roundResults.length > 0
-        ? roundResults.map((r: any) => r.correct ? 'correct' : 'wrong')
+        ? allAttempts
         : [],
     };
 
     await saveGameResult(result);
+    if (mode === 'multi' && roomId && userId) {
+      updateScore(roomId, userId, score).catch(() => {});
+    }
 
     // Submit to cloud leaderboard
     submitScore({
@@ -91,8 +105,8 @@ export default function ScoreScreen({ navigation, route }: any) {
 
   async function handleShare() {
     const text = generateShareText({
-      mode: mode === 'daily' ? 'daily' : 'solo',
-      attempts: roundResults.map((r: any) => r.correct ? 'correct' : 'wrong'),
+      mode: mode || 'solo',
+      attempts: allAttempts.length > 0 ? allAttempts : roundResults.map((r: any) => r.correct ? 'correct' : 'wrong'),
       won: correctRounds > 0,
       score,
       genre: genre?.label,

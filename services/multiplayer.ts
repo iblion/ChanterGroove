@@ -23,6 +23,7 @@ export interface MultiplayerRoom {
   totalRounds: number;
   currentTrackId?: string;
   roundStartTime?: number;
+  roomCode?: string;
 }
 
 function ensureDb() {
@@ -37,10 +38,11 @@ export async function createRoom(options: {
   difficulty: string;
   decade?: string;
   avatar: string;
-}): Promise<string> {
+}): Promise<{ roomId: string; roomCode: string }> {
   ensureDb();
   const roomRef = push(ref(rtdb!, 'rooms'));
   const roomId = roomRef.key!;
+  const roomCode = generateRoomCode();
 
   await set(roomRef, {
     id: roomId,
@@ -59,20 +61,25 @@ export async function createRoom(options: {
     },
     currentRound: 0,
     totalRounds: 10,
+    roomCode,
     createdAt: Date.now(),
   });
 
-  return roomId;
+  await set(ref(rtdb!, `roomCodes/${roomCode}`), roomId);
+  return { roomId, roomCode };
 }
 
 // ─── Join a room ───────────────────────────────────────────────────────────
 export async function joinRoom(
-  roomId: string,
+  roomCodeOrId: string,
   userId: string,
   userName: string,
   avatar: string
 ): Promise<void> {
   ensureDb();
+  const roomId = await resolveRoomId(roomCodeOrId);
+  const snap = await get(ref(rtdb!, `rooms/${roomId}`));
+  if (!snap.exists()) throw new Error('Room not found');
   await update(ref(rtdb!, `rooms/${roomId}/players/${userId}`), {
     name: userName,
     score: 0,
@@ -88,6 +95,15 @@ export async function updateScore(
 ): Promise<void> {
   ensureDb();
   await update(ref(rtdb!, `rooms/${roomId}/players/${userId}`), { score: newScore });
+}
+
+export async function resolveRoomId(roomCodeOrId: string): Promise<string> {
+  ensureDb();
+  const normalized = roomCodeOrId.trim().toUpperCase();
+  if (!normalized) throw new Error('Room code is required');
+  const byCode = await get(ref(rtdb!, `roomCodes/${normalized}`));
+  if (byCode.exists()) return byCode.val() as string;
+  return normalized;
 }
 
 // ─── Listen to room changes ────────────────────────────────────────────────
@@ -120,4 +136,13 @@ export async function advanceRound(roomId: string, nextRound: number): Promise<v
     currentRound: nextRound,
     roundStartTime: Date.now(),
   });
+}
+
+function generateRoomCode(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < 6; i++) {
+    out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return out;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Animated, ActivityIndicator, TextInput, Modal,
@@ -8,11 +8,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
 import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
 import { getMockTracks } from '../services/mockData';
-<<<<<<< HEAD
-import { SpotifyTrack } from '../services/spotify';
-=======
-import { fetchTracksForGame, getSpotifyLastError, SpotifyTrack } from '../services/spotify';
->>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
+import {
+  fetchTracksForGameDetailed,
+  getSpotifyLastError,
+  SpotifyTrack,
+  TrackFetchResult,
+} from '../services/spotify';
 import { getFuzzySuggestions } from '../services/scoring';
 import { playCorrectSound, playWrongSound, playSkipSound, playGameOverSound, triggerHaptic } from '../services/sounds';
 
@@ -25,15 +26,11 @@ type GamePhase = 'loading' | 'listening' | 'guessing' | 'result' | 'paused';
 type AttemptResult = 'correct' | 'wrong' | 'skipped' | 'unused';
 
 export default function GameScreen({ navigation, route }: any) {
-<<<<<<< HEAD
-  const { genre, decade, difficulty, mode } = route.params;
-  const [tracks, setTracks]           = useState<SpotifyTrack[]>([]);
-=======
-  const { genre, decade, difficulty, mode, artistFilter } = route.params;
+  const { genre, decade, difficulty, mode, artistFilter, roomId, userId } = route.params;
   const [tracks, setTracks]           = useState<SpotifyTrack[]>([]);
   const [spotifyTrackCount, setSpotifyTrackCount] = useState(0);
+  const [spotifyAudioBreakdown, setSpotifyAudioBreakdown] = useState({ spotify: 0, itunes: 0 });
   const [spotifyStatusNote, setSpotifyStatusNote] = useState('');
->>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
   const [round, setRound]             = useState(0);
   const [score, setScore]             = useState(0);
   const [phase, setPhase]             = useState<GamePhase>('loading');
@@ -56,52 +53,53 @@ export default function GameScreen({ navigation, route }: any) {
 
   // ─── Init ───────────────────────────────────────────────────────────────
   useEffect(() => {
-<<<<<<< HEAD
-    const genreId = genre?.id || genre?.spotifyGenre || undefined;
-    setTracks(getMockTracks(TOTAL_ROUNDS, genreId));
-    setPhase('listening');
-=======
     let mounted = true;
     const genreId = genre?.id || genre?.spotifyGenre || undefined;
+    const poolSeed = `${genreId || 'all'}-${artistFilter || 'none'}-${decade?.years?.join('-') || 'all'}`;
 
     async function loadTracks() {
       try {
-        const spotifyTracks = await fetchTracksForGame({
+        const fetchResult: TrackFetchResult = await fetchTracksForGameDetailed({
           genre: genre?.spotifyGenre || genreId,
           artist: artistFilter,
           decadeStart: decade?.years?.[0],
           decadeEnd: decade?.years?.[1],
           limit: 50,
         });
+        const spotifyTracks = fetchResult.tracks;
 
         if (!mounted) return;
         setSpotifyTrackCount(spotifyTracks.length);
+        setSpotifyAudioBreakdown({
+          spotify: fetchResult.spotifyPreviewCount,
+          itunes: fetchResult.itunesPreviewCount,
+        });
         setSpotifyStatusNote(
           spotifyTracks.length > 0
             ? ''
             : (getSpotifyLastError() || 'spotify returned no preview tracks')
         );
         if (spotifyTracks.length >= TOTAL_ROUNDS) {
-          setTracks(spotifyTracks.slice(0, TOTAL_ROUNDS));
+          setTracks(deterministicPick(spotifyTracks, TOTAL_ROUNDS, poolSeed));
         } else {
           // Keep any live Spotify tracks we found, and backfill with mock tracks.
           const backfill = getMockTracks(TOTAL_ROUNDS - spotifyTracks.length, genreId);
-          setTracks([...spotifyTracks, ...backfill].slice(0, TOTAL_ROUNDS));
+          setTracks(deterministicPick([...spotifyTracks, ...backfill], TOTAL_ROUNDS, poolSeed));
         }
       } catch (error) {
         if (!mounted) return;
         setSpotifyTrackCount(0);
+        setSpotifyAudioBreakdown({ spotify: 0, itunes: 0 });
         const detailedError = getSpotifyLastError() || (error instanceof Error ? error.message : 'spotify request failed');
         console.warn('[Spotify Debug]', detailedError);
         setSpotifyStatusNote(detailedError);
-        setTracks(getMockTracks(TOTAL_ROUNDS, genreId));
+        setTracks(deterministicPick(getMockTracks(50, genreId), TOTAL_ROUNDS, poolSeed));
       } finally {
         if (mounted) setPhase('listening');
       }
     }
 
     loadTracks();
->>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
     return () => { sound?.unloadAsync(); };
   }, []);
 
@@ -167,6 +165,7 @@ export default function GameScreen({ navigation, route }: any) {
       t.name.toLowerCase() === userInput.toLowerCase().trim() ||
       t.artists[0]?.toLowerCase() === userInput.toLowerCase().trim()
     );
+    if (!guess && !guessTrack) return;
 
     const isRight = guess?.id === currentTrack.id;
     const newAttempts = [...roundAttempts];
@@ -236,6 +235,8 @@ export default function GameScreen({ navigation, route }: any) {
         genre,
         difficulty,
         mode: mode || 'solo',
+        roomId,
+        userId,
         totalRounds: TOTAL_ROUNDS,
         correctRounds: correctCount,
         roundResults: finalResults,
@@ -274,11 +275,11 @@ export default function GameScreen({ navigation, route }: any) {
   );
 
   const progressWidth = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-<<<<<<< HEAD
-=======
   const isSpotifyLive = spotifyTrackCount > 0;
   const sourceLabel = isSpotifyLive ? `Spotify Live (${spotifyTrackCount})` : 'Fallback Tracks';
->>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
+  const sourceDetail = isSpotifyLive
+    ? `${spotifyAudioBreakdown.spotify} Spotify + ${spotifyAudioBreakdown.itunes} iTunes audio`
+    : spotifyStatusNote;
 
   return (
     <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
@@ -287,19 +288,17 @@ export default function GameScreen({ navigation, route }: any) {
         <View>
           <Text style={styles.roundLabel}>ROUND {round + 1} / {TOTAL_ROUNDS}</Text>
           <Text style={styles.genreText}>{genre.emoji} {genre.label}</Text>
-<<<<<<< HEAD
-=======
           <View style={[styles.sourceBadge, isSpotifyLive ? styles.sourceBadgeLive : styles.sourceBadgeFallback]}>
             <Text style={[styles.sourceBadgeText, isSpotifyLive ? styles.sourceBadgeTextLive : styles.sourceBadgeTextFallback]}>
               {sourceLabel}
             </Text>
           </View>
           {!!spotifyStatusNote && !isSpotifyLive && (
-            <Text style={styles.sourceDebugText} numberOfLines={2}>
-              {spotifyStatusNote}
-            </Text>
+            <Text style={styles.sourceDebugText} numberOfLines={2}>{spotifyStatusNote}</Text>
           )}
->>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
+          {!!sourceDetail && isSpotifyLive && (
+            <Text style={styles.sourceDebugText} numberOfLines={2}>{sourceDetail}</Text>
+          )}
         </View>
         <View style={styles.headerRight}>
           <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.scoreBox}>
@@ -358,7 +357,11 @@ export default function GameScreen({ navigation, route }: any) {
                 onChangeText={handleInputChange}
                 autoFocus
                 returnKeyType="done"
+                onSubmitEditing={() => handleSubmit()}
               />
+              <TouchableOpacity style={styles.submitBtn} onPress={() => handleSubmit()}>
+                <Text style={styles.submitText}>Submit</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Autocomplete suggestions */}
@@ -379,8 +382,6 @@ export default function GameScreen({ navigation, route }: any) {
 
             {/* Action buttons */}
             <View style={styles.actionRow}>
-<<<<<<< HEAD
-=======
               <TouchableOpacity
                 onPress={() => {
                   setUserInput('');
@@ -391,7 +392,6 @@ export default function GameScreen({ navigation, route }: any) {
               >
                 <Text style={styles.replayText}>🔁 Replay {clipDuration}s</Text>
               </TouchableOpacity>
->>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
               <TouchableOpacity onPress={handleSkip} style={styles.skipBtn}>
                 <Text style={styles.skipText}>⏭  Skip (+{CLIP_DURATIONS[Math.min(attempt + 1, MAX_ATTEMPTS - 1)]}s clip)</Text>
               </TouchableOpacity>
@@ -480,8 +480,6 @@ const styles = StyleSheet.create({
   scoreValue: { fontSize: 22, color: '#0A0800', fontWeight: '900' },
   pauseBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.bgCardLight, alignItems: 'center', justifyContent: 'center' },
   pauseIcon: { fontSize: 18 },
-<<<<<<< HEAD
-=======
   sourceBadge: { marginTop: SPACING.xs, alignSelf: 'flex-start', borderRadius: RADIUS.full, paddingHorizontal: SPACING.sm, paddingVertical: 4, borderWidth: 1 },
   sourceBadgeLive: { backgroundColor: COLORS.success + '22', borderColor: COLORS.success + '66' },
   sourceBadgeFallback: { backgroundColor: COLORS.warning + '22', borderColor: COLORS.warning + '66' },
@@ -489,7 +487,6 @@ const styles = StyleSheet.create({
   sourceBadgeTextLive: { color: COLORS.success },
   sourceBadgeTextFallback: { color: COLORS.warning },
   sourceDebugText: { marginTop: 4, maxWidth: width * 0.55, color: COLORS.textSecondary, fontSize: 10 },
->>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
 
   // Attempt tracker
   attemptTracker: { flexDirection: 'row', paddingHorizontal: SPACING.lg, gap: 4, marginBottom: SPACING.sm },
@@ -515,18 +512,16 @@ const styles = StyleSheet.create({
   inputArea: { width: '100%', gap: SPACING.sm },
   inputRow: { flexDirection: 'row', gap: SPACING.sm },
   input: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, color: COLORS.textPrimary, fontSize: 16, borderWidth: 1.5, borderColor: COLORS.bgCardLight },
+  submitBtn: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, alignItems: 'center', justifyContent: 'center' },
+  submitText: { color: '#0A0800', fontSize: 13, fontWeight: '800' },
   suggestion: { backgroundColor: COLORS.bgCard, padding: SPACING.md, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.bgCardLight },
   sugTitle: { color: COLORS.textPrimary, fontWeight: '700', fontSize: 15 },
   sugArtist: { color: COLORS.textSecondary, fontSize: 12 },
 
   // Actions
-<<<<<<< HEAD
-  actionRow: { alignItems: 'center', paddingTop: SPACING.xs },
-=======
   actionRow: { alignItems: 'center', paddingTop: SPACING.xs, gap: SPACING.sm },
   replayBtn: { paddingVertical: SPACING.sm, paddingHorizontal: SPACING.lg, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.accent + '66', backgroundColor: COLORS.accent + '14' },
   replayText: { color: COLORS.accent, fontSize: 14, fontWeight: '700' },
->>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
   skipBtn: { paddingVertical: SPACING.sm, paddingHorizontal: SPACING.lg, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.bgCardLight },
   skipText: { color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' },
 
@@ -556,3 +551,21 @@ const styles = StyleSheet.create({
   pauseOptionBtn: { width: '100%', paddingVertical: SPACING.md, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.bgCardLight, alignItems: 'center' },
   pauseOptionText: { fontSize: 16, fontWeight: '700', color: COLORS.textSecondary },
 });
+
+function deterministicPick<T extends { id?: string }>(tracks: T[], count: number, seed: string): T[] {
+  const withKeys = tracks.map((track, idx) => ({
+    track,
+    key: hashString(`${seed}:${track.id || idx}`),
+  }));
+  withKeys.sort((a, b) => a.key - b.key);
+  return withKeys.slice(0, count).map((item) => item.track);
+}
+
+function hashString(input: string): number {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}

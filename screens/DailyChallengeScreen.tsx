@@ -139,9 +139,9 @@ export default function DailyChallengeScreen({ navigation }: any) {
   }
 
   async function saveResult(atts: AttemptResult[], didWin: boolean) {
-    const { getTodayKey } = await import('../services/storage');
+    const { getTodayKeyUTC } = await import('../services/storage');
     await saveDailyResult({
-      dateKey: getTodayKey(),
+      dateKey: getTodayKeyUTC(),
       attempts: atts,
       won: didWin,
       attemptCount: atts.filter(a => a !== 'unused').length,

@@ -21,6 +21,9 @@ export default function StatsScreen() {
 
   const genreEntries = Object.entries(stats.genreBreakdown);
   const maxGenreGames = Math.max(...genreEntries.map(([, v]) => v.games), 1);
+  const modeEntries = Object.entries(stats.modeBreakdown);
+  const attemptEntries = Object.entries(stats.attemptDistribution);
+  const maxAttemptValue = Math.max(...attemptEntries.map(([, v]) => v), 1);
 
   return (
     <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
@@ -64,6 +67,36 @@ export default function StatsScreen() {
               ))}
           </View>
         )}
+
+        {modeEntries.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mode Breakdown</Text>
+            {modeEntries.map(([mode, data]) => (
+              <View key={mode} style={styles.recentRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.recentGenre}>{mode.toUpperCase()}</Text>
+                  <Text style={styles.recentDate}>{data.games} games</Text>
+                </View>
+                <Text style={styles.recentScore}>{data.totalScore.toLocaleString()}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Attempt Distribution</Text>
+          {attemptEntries.map(([attemptLabel, count]) => (
+            <View key={attemptLabel} style={styles.genreRow}>
+              <View style={styles.genreInfo}>
+                <Text style={styles.genreName}>{attemptLabel === 'fail' ? 'Missed' : `Solved in ${attemptLabel}`}</Text>
+                <Text style={styles.genreDetail}>{count}</Text>
+              </View>
+              <View style={styles.genreBarBg}>
+                <View style={[styles.genreBarFill, { width: `${(count / maxAttemptValue) * 100}%` }]} />
+              </View>
+            </View>
+          ))}
+        </View>
 
         {/* Recent games */}
         {stats.recentGames.length > 0 && (

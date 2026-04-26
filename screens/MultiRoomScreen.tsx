@@ -2,16 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Share, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
-import { listenToRoom, startGame, MultiplayerRoom } from '../services/multiplayer';
+import { listenToRoom, resolveRoomId, startGame, MultiplayerRoom } from '../services/multiplayer';
 
 export default function MultiRoomScreen({ navigation, route }: any) {
-  const { roomId, userId, playerName, isHost } = route.params;
+  const { roomId: incomingRoomId, roomCode: incomingRoomCode, userId, playerName, isHost } = route.params;
+  const [roomId, setRoomId] = useState<string>(incomingRoomId);
   const [room, setRoom] = useState<MultiplayerRoom | null>(null);
 
   useEffect(() => {
-    const unsub = listenToRoom(roomId, setRoom);
-    return unsub;
-  }, [roomId]);
+    let unsub = () => {};
+    let mounted = true;
+    (async () => {
+      const resolved = await resolveRoomId(incomingRoomId);
+      if (!mounted) return;
+      setRoomId(resolved);
+      unsub = listenToRoom(resolved, setRoom);
+    })();
+    return () => {
+      mounted = false;
+      unsub();
+    };
+  }, [incomingRoomId]);
 
   useEffect(() => {
     if (room?.status === 'playing') {
@@ -27,7 +38,8 @@ export default function MultiRoomScreen({ navigation, route }: any) {
   }, [room?.status]);
 
   async function handleShare() {
-    await Share.share({ message: `Join my ChanterGroove room! 🥁\nRoom code: ${roomId}\nLet's see who knows their Afrobeats!` });
+    const code = room?.roomCode || incomingRoomCode || incomingRoomId;
+    await Share.share({ message: `Join my ChanterGroove room! 🥁\nRoom code: ${code}\nLet's see who knows their Afrobeats!` });
   }
 
   if (!room) return (
@@ -45,7 +57,7 @@ export default function MultiRoomScreen({ navigation, route }: any) {
         <View style={styles.codeSection}>
           <Text style={styles.codeLabel}>ROOM CODE</Text>
           <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.codeBox}>
-            <Text style={styles.codeText}>{roomId}</Text>
+            <Text style={styles.codeText}>{room.roomCode || incomingRoomCode || incomingRoomId}</Text>
           </LinearGradient>
           <TouchableOpacity onPress={handleShare} style={styles.shareBtn}>
             <Text style={styles.shareText}>📤 Share with friends</Text>

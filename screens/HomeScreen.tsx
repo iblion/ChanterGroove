@@ -100,6 +100,13 @@ export default function HomeScreen({ navigation }: any) {
           <Text style={styles.tagline}>Hear the beat. Name the tune.</Text>
         </View>
 
+        <View style={styles.heroMetaCard}>
+          <Text style={styles.heroMetaTitle}>Afrobeats Mode</Text>
+          <Text style={styles.heroMetaSubtitle}>
+            Daily streak {dailyStreak > 0 ? `🔥 ${dailyStreak}` : 'starts today'}
+          </Text>
+        </View>
+
         {/* Buttons */}
         <View style={styles.buttons}>
           {/* Daily Challenge */}
@@ -187,6 +194,9 @@ const styles = StyleSheet.create({
   tagline: { fontSize: 15, color: COLORS.textSecondary, fontWeight: '600' },
 
   buttons: { width: '100%', gap: SPACING.sm },
+  heroMetaCard: { width: '100%', backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.bgCardLight, padding: SPACING.md, alignItems: 'center' },
+  heroMetaTitle: { fontSize: 13, fontWeight: '800', letterSpacing: 1.1, color: COLORS.primary, textTransform: 'uppercase' },
+  heroMetaSubtitle: { marginTop: 2, fontSize: 13, color: COLORS.textSecondary, fontWeight: '600' },
 
   dailyBtn: { borderRadius: RADIUS.lg, overflow: 'hidden' },
   dailyGrad: { paddingVertical: SPACING.md, paddingHorizontal: SPACING.lg },
