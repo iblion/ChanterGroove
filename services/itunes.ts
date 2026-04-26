@@ -1,6 +1,7 @@
 export async function findItunesPreviewUrl(
   trackName: string,
-  artistName?: string
+  artistName?: string,
+  options?: { requireArtistMatch?: boolean; requireTrackMatch?: boolean }
 ): Promise<string | null> {
   const term = [trackName, artistName].filter(Boolean).join(' ');
   if (!term.trim()) return null;
@@ -21,18 +22,23 @@ export async function findItunesPreviewUrl(
 
   const normalizedTrack = normalize(trackName);
   const normalizedArtist = normalize(artistName || '');
+  const requireArtistMatch = options?.requireArtistMatch ?? false;
+  const requireTrackMatch = options?.requireTrackMatch ?? true;
 
-  // Prefer best textual match, otherwise first result with preview.
+  // Prefer strict textual match.
   const best = results.find((r: any) => {
     const rTrack = normalize(r?.trackName || '');
     const rArtist = normalize(r?.artistName || '');
-    const trackMatch = normalizedTrack && rTrack.includes(normalizedTrack);
+    const trackMatch = normalizedTrack && (rTrack.includes(normalizedTrack) || normalizedTrack.includes(rTrack));
     const artistMatch =
       !normalizedArtist || (rArtist && rArtist.includes(normalizedArtist));
-    return trackMatch && artistMatch && r?.previewUrl;
+    if (requireTrackMatch && !trackMatch) return false;
+    if (requireArtistMatch && !artistMatch) return false;
+    return r?.previewUrl;
   });
 
   if (best?.previewUrl) return best.previewUrl;
+  if (requireArtistMatch || requireTrackMatch) return null;
   const fallback = results.find((r: any) => !!r?.previewUrl);
   return fallback?.previewUrl || null;
 }

@@ -22,7 +22,7 @@ export interface GameResult {
   score: number;
   genre: string;
   difficulty: string;
-  mode: 'solo' | 'daily' | 'multi';
+  mode: 'solo' | 'daily' | 'multi' | 'speed' | 'lyrics';
   totalRounds: number;
   correctRounds: number;
   attempts: ('correct' | 'wrong' | 'skipped' | 'unused')[];

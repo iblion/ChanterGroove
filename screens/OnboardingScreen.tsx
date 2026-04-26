@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   TextInput, Animated, Dimensions, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
+import { ColorTokens, SPACING, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { saveProfile, UserProfile } from '../services/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -34,6 +35,15 @@ interface Props {
 }
 
 export default function OnboardingScreen({ onComplete }: Props) {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const FeatureItem = ({ emoji, text }: { emoji: string; text: string }) => (
+    <View style={styles.featureRow}>
+      <Text style={styles.featureEmoji}>{emoji}</Text>
+      <Text style={styles.featureText}>{text}</Text>
+    </View>
+  );
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState('🥁');
@@ -58,13 +68,13 @@ export default function OnboardingScreen({ onComplete }: Props) {
   }
 
   return (
-    <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
+    <LinearGradient colors={gradients.bgMain} style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         {step === 0 && (
           <>
             <View style={styles.center}>
               <Image source={require('../assets/icon.png')} style={styles.logo} resizeMode="contain" />
-              <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.titleBadge}>
+              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.titleBadge}>
                 <Text style={styles.title}>ChanterGroove</Text>
               </LinearGradient>
               <Text style={styles.tagline}>Hear the beat. Name the tune. 🥁</Text>
@@ -75,7 +85,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
               </Text>
             </View>
             <TouchableOpacity style={styles.primaryBtn} onPress={() => animateTransition(1)} activeOpacity={0.85}>
-              <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
+              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
                 <Text style={styles.btnText}>Let's Go! 🔥</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -85,7 +95,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
         {step === 1 && (
           <>
             <View style={styles.center}>
-              <LinearGradient colors={GRADIENTS.primary} style={styles.bigAvatar}>
+              <LinearGradient colors={gradients.primary} style={styles.bigAvatar}>
                 <Text style={styles.bigAvatarText}>{avatar}</Text>
               </LinearGradient>
               <Text style={styles.stepTitle}>Pick Your Avatar</Text>
@@ -103,7 +113,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
               </View>
             </View>
             <TouchableOpacity style={styles.primaryBtn} onPress={() => animateTransition(2)} activeOpacity={0.85}>
-              <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
+              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
                 <Text style={styles.btnText}>Next →</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -119,7 +129,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
               <TextInput
                 style={styles.nameInput}
                 placeholder="Enter your name…"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={name}
                 onChangeText={setName}
                 maxLength={20}
@@ -127,7 +137,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
               />
             </View>
             <TouchableOpacity style={styles.primaryBtn} onPress={() => animateTransition(3)} activeOpacity={0.85}>
-              <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
+              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
                 <Text style={styles.btnText}>Next →</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -151,7 +161,7 @@ export default function OnboardingScreen({ onComplete }: Props) {
               </View>
             </View>
             <TouchableOpacity style={styles.primaryBtn} onPress={handleFinish} activeOpacity={0.85}>
-              <LinearGradient colors={GRADIENTS.hot} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
+              <LinearGradient colors={gradients.hot} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
                 <Text style={styles.btnText}>🥁  Start Playing!</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -169,51 +179,43 @@ export default function OnboardingScreen({ onComplete }: Props) {
   );
 }
 
-function FeatureItem({ emoji, text }: { emoji: string; text: string }) {
-  return (
-    <View style={styles.featureRow}>
-      <Text style={styles.featureEmoji}>{emoji}</Text>
-      <Text style={styles.featureText}>{text}</Text>
-    </View>
-  );
-}
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   container: { flex: 1 },
   content: { flex: 1, justifyContent: 'space-between', paddingHorizontal: SPACING.xl, paddingTop: height * 0.1, paddingBottom: height * 0.06 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md },
 
   logo: { width: 140, height: 140 },
   titleBadge: { borderRadius: RADIUS.sm, paddingHorizontal: SPACING.lg, paddingVertical: 8 },
-  title: { fontSize: 32, fontWeight: '900', color: '#0A0800', letterSpacing: -0.5 },
-  tagline: { fontSize: 18, fontWeight: '700', color: COLORS.textPrimary },
-  desc: { fontSize: 15, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 24 },
+  title: { fontSize: 32, fontWeight: '900', color: colors.onPrimary, letterSpacing: -0.5 },
+  tagline: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
+  desc: { fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 24 },
 
-  stepTitle: { fontSize: 26, fontWeight: '900', color: COLORS.textPrimary },
-  stepSub: { fontSize: 15, color: COLORS.textSecondary, textAlign: 'center' },
+  stepTitle: { fontSize: 26, fontWeight: '900', color: colors.textPrimary },
+  stepSub: { fontSize: 15, color: colors.textSecondary, textAlign: 'center' },
 
-  bigAvatar: { width: 100, height: 100, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: COLORS.primary, shadowOpacity: 0.4, shadowRadius: 20 },
+  bigAvatar: { width: 100, height: 100, borderRadius: 50, alignItems: 'center', justifyContent: 'center', shadowColor: colors.primary, shadowOpacity: 0.4, shadowRadius: 20 },
   bigAvatarText: { fontSize: 50 },
 
   avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, justifyContent: 'center', maxWidth: 320 },
-  avatarOption: { width: 50, height: 50, borderRadius: 25, backgroundColor: COLORS.bgCard, borderWidth: 1.5, borderColor: COLORS.bgCardLight, alignItems: 'center', justifyContent: 'center' },
-  avatarSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '22' },
+  avatarOption: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.bgCard, borderWidth: 1.5, borderColor: colors.bgCardLight, alignItems: 'center', justifyContent: 'center' },
+  avatarSelected: { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
   avatarEmoji: { fontSize: 24 },
 
   nameEmoji: { fontSize: 60 },
-  nameInput: { width: '100%', backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.lg, color: COLORS.textPrimary, fontSize: 22, fontWeight: '700', borderWidth: 1.5, borderColor: COLORS.bgCardLight, textAlign: 'center' },
+  nameInput: { width: '100%', backgroundColor: colors.bgCard, borderRadius: RADIUS.md, padding: SPACING.lg, color: colors.textPrimary, fontSize: 22, fontWeight: '700', borderWidth: 1.5, borderColor: colors.bgCardLight, textAlign: 'center' },
 
   readyEmoji: { fontSize: 60 },
   featureList: { gap: SPACING.sm, marginTop: SPACING.md, width: '100%' },
-  featureRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, borderWidth: 1, borderColor: COLORS.bgCardLight },
+  featureRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, backgroundColor: colors.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, borderWidth: 1, borderColor: colors.bgCardLight },
   featureEmoji: { fontSize: 22 },
-  featureText: { fontSize: 15, color: COLORS.textPrimary, fontWeight: '600' },
+  featureText: { fontSize: 15, color: colors.textPrimary, fontWeight: '600' },
 
   primaryBtn: { borderRadius: RADIUS.lg, overflow: 'hidden' },
   btnGrad: { paddingVertical: SPACING.md + 6, alignItems: 'center' },
-  btnText: { fontSize: 20, fontWeight: '900', color: '#0A0800' },
+  btnText: { fontSize: 20, fontWeight: '900', color: colors.onPrimary },
 
   dots: { flexDirection: 'row', justifyContent: 'center', gap: SPACING.sm, marginTop: SPACING.lg },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.bgCardLight },
-  dotActive: { backgroundColor: COLORS.primary, width: 24 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.bgCardLight },
+  dotActive: { backgroundColor: colors.primary, width: 24 },
 });

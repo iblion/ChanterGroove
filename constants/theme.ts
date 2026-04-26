@@ -1,116 +1,246 @@
-// ─── ChanterGroove Afrobeats Design System ─────────────────────────────────
-// Inspired by Yoruba culture, Afrobeats energy, and the Ilu Gangan (talking drum)
+// ─── ChanterGroove · Design System ──────────────────────────────────────────
+// Two palettes: Lagos Night (dark) + Warm Sunset (light).
+// Both share the same token shape so screens can switch via `useTheme()`.
 
-export const COLORS = {
-  // Primary — warm Yoruba gold (like the gangan drum's skin)
-  primary: '#E8A020',
-  primaryDark: '#B87A10',
-  primaryLight: '#F5C842',
+export interface ColorTokens {
+  // Brand
+  primary: string;
+  primaryDark: string;
+  primaryLight: string;
+  accent: string;
+  accentDark: string;
+  hot: string;
+  hotLight: string;
 
-  // Accent — vibrant Afrobeats green (like adire cloth)
-  accent: '#00C48C',
-  accentDark: '#009E72',
+  // Surfaces
+  bg: string;
+  bgPanel: string;
+  bgPanelDeep: string;
+  bgCard: string;
+  bgCardLight: string;
+  bgElevated: string;
+  bgModal: string;
 
-  // Hot accent — Afrobeats red-orange energy
-  hot: '#E8541A',
-  hotLight: '#FF7043',
+  // Lines
+  border: string;
+  borderSoft: string;
 
-  // Background — deep Yoruba midnight
-  bg: '#0A0800',
-  bgCard: '#161208',
-  bgCardLight: '#221A0A',
-  bgModal: '#120E04',
-
-  // Warm overlay tones
-  warmOverlay: 'rgba(232,160,32,0.08)',
+  // Overlays
+  warmOverlay: string;
 
   // Text
-  textPrimary: '#FFF5E0',       // warm white, not cold
-  textSecondary: '#A08858',     // dusty gold
-  textMuted: '#4A3A20',
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
 
   // Status
-  success: '#00C48C',
-  error: '#E83A3A',
-  warning: '#F5C842',
+  success: string;
+  error: string;
+  warning: string;
 
-  // Genre tag colors — inspired by ankara fabric colors
-  afrobeat: '#E8A020',
-  afropop: '#F5C842',
-  hiphop: '#9B5DE5',
-  pop: '#E8541A',
-  rnb: '#00AADD',
-  dancehall: '#00C48C',
-  rock: '#E83A3A',
-  jazz: '#D4A847',
-  classic: '#8A7A60',
+  // Genre dots
+  afrobeat: string;
+  afropop: string;
+  amapiano: string;
+  hiphop: string;
+  pop: string;
+  rnb: string;
+  dancehall: string;
+  rock: string;
+  jazz: string;
+  classic: string;
 
-  // Gangan drum gold gradient stops
-  drumGold1: '#F5C842',
-  drumGold2: '#E8A020',
-  drumGold3: '#B87A10',
+  // Legacy
+  drumGold1: string;
+  drumGold2: string;
+  drumGold3: string;
+
+  // CTA-text contrast (for text inside the orange gradient buttons,
+  // and for the inverted card backdrop on light mode).
+  onPrimary: string;
+}
+
+export interface GradientTokens {
+  bgMain: [string, string, string];
+  bgCard: [string, string];
+  primary: [string, string, string];
+  hot: [string, string];
+  accent: [string, string];
+  halo: [string, string];
+}
+
+// ─── Lagos Night (dark) ─────────────────────────────────────────────────────
+export const DARK_TOKENS: ColorTokens = {
+  primary: '#F08F4D',
+  primaryDark: '#C9612A',
+  primaryLight: '#FFB07A',
+  accent: '#F08F4D',
+  accentDark: '#C9612A',
+  hot: '#F2B441',
+  hotLight: '#FFD27A',
+
+  bg: '#0E1024',
+  bgPanel: '#141838',
+  bgPanelDeep: '#0A0C1E',
+  bgCard: '#1A1F3D',
+  bgCardLight: '#252A4A',
+  bgElevated: '#2D3357',
+  bgModal: '#070818',
+
+  border: '#2D3357',
+  borderSoft: '#1F2440',
+
+  warmOverlay: 'rgba(240,143,77,0.10)',
+
+  textPrimary: '#F0EFEA',
+  textSecondary: '#A4A8C9',
+  textMuted: '#6E7299',
+
+  success: '#34D08A',
+  error: '#F0556B',
+  warning: '#F2B441',
+
+  afrobeat: '#F08F4D',
+  afropop: '#FFB07A',
+  amapiano: '#34D08A',
+  hiphop: '#B17BFF',
+  pop: '#FB7185',
+  rnb: '#7AD3B0',
+  dancehall: '#5BC9B5',
+  rock: '#F0556B',
+  jazz: '#F2B441',
+  classic: '#A4A8C9',
+
+  drumGold1: '#FFD27A',
+  drumGold2: '#F2B441',
+  drumGold3: '#C9612A',
+
+  onPrimary: '#0E1024',
 };
 
-export const GRADIENTS = {
-  // Main screen backgrounds
-  bgMain: ['#0A0800', '#1A1000', '#0A0800'] as [string, string, string],
-  bgCard: ['#161208', '#1E1608'] as [string, string],
-
-  // Primary CTA gradient
-  primary: ['#F5C842', '#E8A020', '#B87A10'] as [string, string, string],
-
-  // Hot/energy gradient for exciting moments
-  hot: ['#F5C842', '#E8541A'] as [string, string],
-
-  // Accent gradient
-  accent: ['#00C48C', '#009E72'] as [string, string],
+export const DARK_GRADIENTS: GradientTokens = {
+  bgMain:  ['#0E1024', '#171B3B', '#0E1024'],
+  bgCard:  ['#1A1F3D', '#252A4A'],
+  primary: ['#FFB07A', '#F08F4D', '#C9612A'],
+  hot:     ['#FFD27A', '#F2B441'],
+  accent:  ['#F08F4D', '#C9612A'],
+  halo:    ['rgba(240,143,77,0.35)', 'rgba(240,143,77,0.00)'],
 };
 
+// ─── Warm Sunset (light) ────────────────────────────────────────────────────
+// Cream base, terracotta CTA, deep forest-green for kickers / streaks.
+// Inverted from Lagos Night but keeps the Afrobeat warmth.
+export const LIGHT_TOKENS: ColorTokens = {
+  primary: '#E36A2C',          // terracotta CTA
+  primaryDark: '#B04A14',
+  primaryLight: '#F7935A',
+  accent: '#E36A2C',
+  accentDark: '#B04A14',
+  hot: '#1F4D2A',              // forest green for streak/kicker — pops on cream
+  hotLight: '#2F6F3D',
+
+  bg: '#F8EBD5',               // warm cream
+  bgPanel: '#F2DFC0',           // deeper cream tint
+  bgPanelDeep: '#EAD1A8',
+  bgCard: '#FFF4E0',           // off-white card
+  bgCardLight: '#FFFAEE',
+  bgElevated: '#FFFFFF',
+  bgModal: '#FFFFFF',
+
+  border: '#E2C9A1',
+  borderSoft: '#EFD9B4',
+
+  warmOverlay: 'rgba(227,106,44,0.12)',
+
+  textPrimary: '#1A140A',       // espresso brown — strong on cream
+  textSecondary: '#5C4A33',     // earthy mid
+  textMuted: '#8C7A60',
+
+  success: '#1F8A55',           // a touch deeper for cream legibility
+  error: '#C8423B',
+  warning: '#C77F1A',
+
+  afrobeat: '#E36A2C',
+  afropop: '#F7935A',
+  amapiano: '#1F8A55',
+  hiphop: '#7A4DDB',
+  pop: '#D4476B',
+  rnb: '#3F8C73',
+  dancehall: '#3FA797',
+  rock: '#C8423B',
+  jazz: '#C77F1A',
+  classic: '#5C4A33',
+
+  drumGold1: '#F7C775',
+  drumGold2: '#E0A04A',
+  drumGold3: '#B04A14',
+
+  onPrimary: '#FFF4E0',         // cream text on the orange CTA in light mode
+};
+
+export const LIGHT_GRADIENTS: GradientTokens = {
+  bgMain:  ['#F8EBD5', '#F2DFC0', '#F8EBD5'],
+  bgCard:  ['#FFF4E0', '#FFFAEE'],
+  primary: ['#F7935A', '#E36A2C', '#B04A14'],
+  hot:     ['#2F6F3D', '#1F4D2A'],
+  accent:  ['#E36A2C', '#B04A14'],
+  halo:    ['rgba(227,106,44,0.30)', 'rgba(227,106,44,0.00)'],
+};
+
+// ─── Default (back-compat) ──────────────────────────────────────────────────
+// `COLORS` and `GRADIENTS` continue to be importable from this module.
+// They default to the dark palette; screens that want live theme switching
+// should consume `useTheme()` instead. Static module-level usages (e.g. inside
+// `StyleSheet.create` outside a component) will see the dark palette.
+export const COLORS: ColorTokens = DARK_TOKENS;
+export const GRADIENTS: GradientTokens = DARK_GRADIENTS;
+
+// ─── Layout tokens (theme-agnostic) ─────────────────────────────────────────
 export const FONTS = {
   regular: 'System',
   medium: 'System',
   bold: 'System',
+  monoNumeric: 'System',
 };
 
 export const SPACING = {
   xs: 4,
   sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
-  xxxl: 64,
+  md: 14,
+  lg: 20,
+  xl: 28,
+  xxl: 40,
+  xxxl: 56,
 };
 
 export const RADIUS = {
   sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
+  md: 12,
+  lg: 16,
+  xl: 22,
   full: 999,
 };
 
 export const MOTION = {
-  fast: 180,
-  normal: 280,
-  slow: 420,
+  fast: 160,
+  normal: 240,
+  slow: 380,
 };
 
-// ─── Genres ─────────────────────────────────────────────────────────────────
+// ─── Genres / Decades / Difficulty ──────────────────────────────────────────
 export const GENRES = [
-  { id: 'afrobeats', label: 'Afrobeats', emoji: '🥁', color: '#E8A020', spotifyGenre: 'afrobeats', featured: true },
-  { id: 'afropop',   label: 'Afropop',   emoji: '🌍', color: '#F5C842', spotifyGenre: 'afro-pop',  featured: true },
-  { id: 'amapiano',  label: 'Amapiano',  emoji: '🎹', color: '#00C48C', spotifyGenre: 'amapiano',  featured: true },
-  { id: 'hiphop',    label: 'Hip-Hop',   emoji: '🎤', color: '#9B5DE5', spotifyGenre: 'hip-hop',   featured: false },
-  { id: 'rap',       label: 'Rap',       emoji: '🔥', color: '#7B2FBE', spotifyGenre: 'rap',       featured: false },
-  { id: 'pop',       label: 'Pop',       emoji: '⭐', color: '#E8541A', spotifyGenre: 'pop',       featured: false },
-  { id: 'rnb',       label: 'R&B',       emoji: '💫', color: '#00AADD', spotifyGenre: 'r-n-b',    featured: false },
-  { id: 'dancehall', label: 'Dancehall', emoji: '🕺', color: '#00C48C', spotifyGenre: 'dancehall', featured: false },
-  { id: 'rock',      label: 'Rock',      emoji: '🎸', color: '#E83A3A', spotifyGenre: 'rock',      featured: false },
-  { id: 'jazz',      label: 'Jazz',      emoji: '🎷', color: '#D4A847', spotifyGenre: 'jazz',      featured: false },
+  { id: 'afrobeats', label: 'Afrobeats', emoji: '🥁', color: '#E36A2C', spotifyGenre: 'afrobeats', featured: true },
+  { id: 'afropop',   label: 'Afropop',   emoji: '🌍', color: '#F7935A', spotifyGenre: 'afro-pop',  featured: true },
+  { id: 'amapiano',  label: 'Amapiano',  emoji: '🎹', color: '#1F8A55', spotifyGenre: 'amapiano',  featured: true },
+  { id: 'hiphop',    label: 'Hip-Hop',   emoji: '🎤', color: '#7A4DDB', spotifyGenre: 'hip-hop',   featured: false },
+  { id: 'rap',       label: 'Rap',       emoji: '🔥', color: '#9C5BFF', spotifyGenre: 'rap',       featured: false },
+  { id: 'pop',       label: 'Pop',       emoji: '⭐', color: '#D4476B', spotifyGenre: 'pop',       featured: false },
+  { id: 'rnb',       label: 'R&B',       emoji: '💫', color: '#3F8C73', spotifyGenre: 'r-n-b',    featured: false },
+  { id: 'dancehall', label: 'Dancehall', emoji: '🕺', color: '#3FA797', spotifyGenre: 'dancehall', featured: false },
+  { id: 'rock',      label: 'Rock',      emoji: '🎸', color: '#C8423B', spotifyGenre: 'rock',      featured: false },
+  { id: 'jazz',      label: 'Jazz',      emoji: '🎷', color: '#C77F1A', spotifyGenre: 'jazz',      featured: false },
 ];
 
-// ─── Decades ────────────────────────────────────────────────────────────────
 export const DECADES = [
   { id: '70s',   label: '70s',   years: [1970, 1979] },
   { id: '80s',   label: '80s',   years: [1980, 1989] },
@@ -120,7 +250,6 @@ export const DECADES = [
   { id: '2020s', label: '2020s', years: [2020, 2029] },
 ];
 
-// ─── Difficulty ─────────────────────────────────────────────────────────────
 export const DIFFICULTY = [
   { id: 'easy',   label: 'Easy',   seconds: 10, emoji: '😊', multiplier: 1 },
   { id: 'medium', label: 'Medium', seconds: 5,  emoji: '😤', multiplier: 2 },

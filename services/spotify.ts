@@ -29,6 +29,7 @@ export interface SpotifyTrack {
   previewUrl: string | null;
   year: number;
   genre?: string;
+  artistGenres?: string[];
   popularity: number;
   audioSource?: 'spotify' | 'itunes';
 }
@@ -133,10 +134,6 @@ export async function fetchTracksForGameDetailed(options: {
         `${safeGenre}${yearFilter}`,
         `afrobeats${yearFilter}`,
         `year:${safeDecadeStart || 2018}-${safeDecadeEnd || 2025}`,
-        'burna boy',
-        'wizkid',
-        'rema',
-        'top hits',
       ];
 
   for (const query of queries) {
@@ -159,8 +156,17 @@ export async function fetchTracksForGameDetailed(options: {
 
       const data = await res.json();
       const items = data?.tracks?.items || [];
+      const artistIds = Array.from(
+        new Set(
+          items
+            .map((t: any) => t?.artists?.[0]?.id)
+            .filter(Boolean)
+        )
+      ) as string[];
+      const artistGenreMap = await fetchArtistGenres(token, artistIds);
       for (const t of items) {
         if (!t?.id || deduped.has(t.id)) continue;
+        const primaryArtistId = t?.artists?.[0]?.id || '';
         const mappedTrack: SpotifyTrack = {
           id: t.id,
           name: t.name,
@@ -170,9 +176,10 @@ export async function fetchTracksForGameDetailed(options: {
           previewUrl: t.preview_url,
           year: new Date(t.album.release_date).getFullYear(),
           genre: safeGenre,
+          artistGenres: artistGenreMap[primaryArtistId] || [],
           popularity: t.popularity,
         };
-        if (!passesFilters(mappedTrack, safeArtist, safeDecadeStart, safeDecadeEnd)) continue;
+        if (!passesFilters(mappedTrack, safeGenre, safeArtist, safeDecadeStart, safeDecadeEnd)) continue;
         deduped.set(t.id, mappedTrack);
       }
     }
@@ -187,7 +194,12 @@ export async function fetchTracksForGameDetailed(options: {
     };
   }
 
-  const mixed = await fillMissingPreviews(Array.from(deduped.values()), safeLimit, safeGenre);
+  const mixed = await fillMissingPreviews(
+    Array.from(deduped.values()),
+    safeLimit,
+    safeGenre,
+    safeArtist
+  );
   const spotifyPreviewCount = mixed.filter((t) => t.audioSource === 'spotify').length;
   const itunesPreviewCount = mixed.filter((t) => t.audioSource === 'itunes').length;
   if (mixed.length === 0) {
@@ -249,7 +261,8 @@ function shuffleArray<T>(arr: T[]): T[] {
 async function fillMissingPreviews(
   tracks: SpotifyTrack[],
   limit: number,
-  genre?: string
+  genre?: string,
+  artist?: string
 ): Promise<SpotifyTrack[]> {
   const selected = shuffleArray(tracks).slice(0, Math.max(limit * 2, 25));
   const output: SpotifyTrack[] = [];
@@ -262,7 +275,10 @@ async function fillMissingPreviews(
       continue;
     }
 
-    const itunesPreview = await findItunesPreviewUrl(track.name, track.artists[0]);
+    const itunesPreview = await findItunesPreviewUrl(track.name, track.artists[0], {
+      requireArtistMatch: !!artist,
+      requireTrackMatch: true,
+    });
     if (itunesPreview) {
       output.push({
         ...track,
@@ -278,10 +294,21 @@ async function fillMissingPreviews(
 
 function passesFilters(
   track: SpotifyTrack,
+  genre?: string,
   artist?: string,
   decadeStart?: number,
   decadeEnd?: number
 ): boolean {
+  if (genre && !artist) {
+    // In strict genre mode, require Spotify artist-genre confirmation.
+    // If genre metadata is missing, reject to prevent cross-genre leakage.
+    const genres = track.artistGenres || [];
+    if (genres.length === 0) {
+      if (!passesArtistAllowlistFallback(track, genre)) return false;
+    } else if (!matchesGenre(genres, genre)) {
+      return false;
+    }
+  }
   if (artist) {
     const needle = artist.toLowerCase();
     const artistMatch = track.artists.some((a) => a.toLowerCase().includes(needle));
@@ -291,6 +318,75 @@ function passesFilters(
     if (track.year < decadeStart || track.year > decadeEnd) return false;
   }
   return true;
+}
+
+function matchesGenre(artistGenres: string[], wantedGenre: string): boolean {
+  const normalizedWanted = wantedGenre.toLowerCase();
+  const aliases: Record<string, string[]> = {
+    afrobeats: ['afrobeats', 'afrobeat', 'naija', 'nigerian pop', 'afro pop', 'afroswing', 'afrofusion', 'afro r&b', 'afro dancehall'],
+    afropop: ['afropop', 'afro pop', 'nigerian pop', 'afrofusion', 'afroswing'],
+    amapiano: ['amapiano'],
+    hiphop: ['hip hop', 'hip-hop', 'rap', 'trap'],
+    rap: ['rap', 'hip hop', 'hip-hop', 'trap'],
+    rnb: ['r&b', 'rnb', 'soul', 'neo soul'],
+    pop: ['pop'],
+    dancehall: ['dancehall'],
+    rock: ['rock'],
+    jazz: ['jazz'],
+  };
+  const needles = aliases[normalizedWanted] || [normalizedWanted];
+  const haystack = artistGenres.map((g) => g.toLowerCase());
+  return haystack.some((g) => needles.some((n) => g.includes(n)));
+}
+
+function passesArtistAllowlistFallback(track: SpotifyTrack, genre: string): boolean {
+  const primaryArtist = (track.artists?.[0] || '').toLowerCase();
+  if (!primaryArtist) return false;
+
+  const allowlist: Record<string, string[]> = {
+    afrobeats: [
+      'wizkid', 'burna boy', 'davido', 'rema', 'tems', 'asake', 'fireboy dml',
+      'omah lay', 'ayra starr', 'tiwa savage', 'ckay', 'kizz daniel', 'joeboy',
+      'victony', 'oxlade', 'ladipoe', 'pheelz', 'tekno', 'mr eazi', 'yemi alade',
+    ],
+    afropop: [
+      'wizkid', 'davido', 'rema', 'tiwa savage', 'joeboy', 'yemi alade', 'tekno',
+      'kizz daniel', 'fireboy dml',
+    ],
+    amapiano: [
+      'tyla', 'kabza de small', 'dj maphorisa', 'young stunna', 'focalistic',
+      'uncle waffles', 'dbn gogo', 'vigro deep',
+    ],
+  };
+
+  const artists = allowlist[genre.toLowerCase()];
+  if (!artists || artists.length === 0) return false;
+  return artists.some((name) => primaryArtist.includes(name));
+}
+
+async function fetchArtistGenres(
+  token: string,
+  artistIds: string[]
+): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {};
+  if (artistIds.length === 0) return out;
+  const chunks: string[][] = [];
+  for (let i = 0; i < artistIds.length; i += 50) {
+    chunks.push(artistIds.slice(i, i + 50));
+  }
+  for (const chunk of chunks) {
+    const url = `${API_BASE}/artists?ids=${chunk.join(',')}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) continue;
+    const data = await res.json();
+    const artists = data?.artists || [];
+    for (const artist of artists) {
+      out[artist.id] = Array.isArray(artist.genres) ? artist.genres : [];
+    }
+  }
+  return out;
 }
 
 function encodeBase64(input: string): string {

@@ -3,7 +3,7 @@ import { GameResult, DailyResult } from './storage';
 // ─── Generate Wordle-style emoji share text ────────────────────────────────
 
 export function generateShareText(options: {
-  mode: 'daily' | 'solo' | 'multi' | 'speed';
+  mode: 'daily' | 'solo' | 'multi' | 'speed' | 'lyrics' | 'lyrics_daily';
   attempts: ('correct' | 'wrong' | 'skipped' | 'unused')[];
   won: boolean;
   score?: number;
@@ -32,6 +32,10 @@ export function generateShareText(options: {
     lines.push('🥁 ChanterGroove Multiplayer');
   } else if (mode === 'speed') {
     lines.push('🥁 ChanterGroove Speed Round');
+  } else if (mode === 'lyrics') {
+    lines.push('🥁 ChanterGroove Lyrics Mode');
+  } else if (mode === 'lyrics_daily') {
+    lines.push('🥁 ChanterGroove Daily Lyrics');
   } else {
     lines.push('🥁 ChanterGroove');
   }

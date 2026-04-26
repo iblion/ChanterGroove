@@ -14,7 +14,7 @@ export interface LeaderboardEntry {
   genre: string;
   difficulty: string;
   timestamp: number;
-  mode: 'solo' | 'daily' | 'speed';
+  mode: 'solo' | 'daily' | 'speed' | 'lyrics';
 }
 
 /**
@@ -24,7 +24,7 @@ export async function submitScore(options: {
   score: number;
   genre: string;
   difficulty: string;
-  mode: 'solo' | 'daily' | 'speed';
+  mode: 'solo' | 'daily' | 'speed' | 'lyrics';
 }): Promise<void> {
   if (!rtdb) {
     console.log('[leaderboard] Firebase not configured — skipping cloud submit');

@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   Animated, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../contexts/ThemeContext';
+import PatternBackdrop from '../components/PatternBackdrop';
 import { Audio } from 'expo-av';
-import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
+import { ColorTokens, SPACING, RADIUS } from '../constants/theme';
 import { getMockTracks, getRandomChoices, MOCK_TRACKS } from '../services/mockData';
 import { SpotifyTrack } from '../services/spotify';
 import { saveGameResult, GameResult } from '../services/storage';
@@ -17,6 +19,9 @@ const GAME_DURATION = 60; // seconds
 const CLIP_DURATION = 3000; // 3 second clips
 
 export default function SpeedRoundScreen({ navigation }: any) {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [phase, setPhase] = useState<'ready' | 'playing' | 'done'>('ready');
   const [tracks, setTracks] = useState<SpotifyTrack[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -154,7 +159,7 @@ export default function SpeedRoundScreen({ navigation }: any) {
   // ─── Ready screen ────────────────────────────────────────────────────
   if (phase === 'ready') {
     return (
-      <LinearGradient colors={GRADIENTS.bgMain} style={styles.center}>
+      <PatternBackdrop style={styles.center}>
         <Text style={styles.readyEmoji}>⚡</Text>
         <Text style={styles.readyTitle}>Speed Round</Text>
         <Text style={styles.readyDesc}>
@@ -162,25 +167,25 @@ export default function SpeedRoundScreen({ navigation }: any) {
           Tap the correct song as fast as you can!
         </Text>
         <TouchableOpacity onPress={startGame} style={styles.startBtn} activeOpacity={0.85}>
-          <LinearGradient colors={GRADIENTS.hot} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.startGrad}>
+          <LinearGradient colors={gradients.hot} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.startGrad}>
             <Text style={styles.startText}>🔥  GO!</Text>
           </LinearGradient>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
-      </LinearGradient>
+      </PatternBackdrop>
     );
   }
 
   // ─── Done screen ─────────────────────────────────────────────────────
   if (phase === 'done') {
     return (
-      <LinearGradient colors={GRADIENTS.bgMain} style={styles.center}>
+      <PatternBackdrop style={styles.center}>
         <Confetti active={showConfetti} />
         <Text style={styles.doneEmoji}>{correct >= 10 ? '🏆' : correct >= 5 ? '🔥' : '😅'}</Text>
         <Text style={styles.doneTitle}>Time's Up!</Text>
-        <LinearGradient colors={GRADIENTS.hot} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.scoreBadge}>
+        <LinearGradient colors={gradients.hot} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.scoreBadge}>
           <Text style={styles.doneScore}>{score.toLocaleString()}</Text>
         </LinearGradient>
         <View style={styles.doneStats}>
@@ -189,14 +194,14 @@ export default function SpeedRoundScreen({ navigation }: any) {
           <StatItem label="Accuracy" value={`${correct + wrong > 0 ? Math.round((correct / (correct + wrong)) * 100) : 0}%`} emoji="🎯" />
         </View>
         <TouchableOpacity onPress={startGame} style={styles.startBtn} activeOpacity={0.85}>
-          <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.startGrad}>
+          <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.startGrad}>
             <Text style={styles.startText}>🔄  Play Again</Text>
           </LinearGradient>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backBtn}>
           <Text style={styles.backText}>← Home</Text>
         </TouchableOpacity>
-      </LinearGradient>
+      </PatternBackdrop>
     );
   }
 
@@ -205,7 +210,7 @@ export default function SpeedRoundScreen({ navigation }: any) {
   if (!currentTrack) return null;
 
   return (
-    <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
+    <PatternBackdrop style={styles.container}>
       {/* Top bar */}
       <View style={styles.topBar}>
         <View>
@@ -223,7 +228,7 @@ export default function SpeedRoundScreen({ navigation }: any) {
 
       {/* Listening indicator */}
       <View style={styles.listeningWrap}>
-        <LinearGradient colors={GRADIENTS.hot} style={styles.listeningCircle}>
+        <LinearGradient colors={gradients.hot} style={styles.listeningCircle}>
           <Text style={styles.listeningEmoji}>⚡</Text>
         </LinearGradient>
         <Text style={styles.listeningText}>🔊 Listening…</Text>
@@ -256,7 +261,7 @@ export default function SpeedRoundScreen({ navigation }: any) {
         <Text style={styles.statItem}>✅ {correct}</Text>
         <Text style={styles.statItem}>❌ {wrong}</Text>
       </View>
-    </LinearGradient>
+    </PatternBackdrop>
   );
 }
 
@@ -270,46 +275,46 @@ function StatItem({ label, value, emoji }: { label: string; value: string; emoji
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: SPACING.xl, gap: SPACING.lg },
 
   // Ready
   readyEmoji: { fontSize: 80 },
-  readyTitle: { fontSize: 36, fontWeight: '900', color: COLORS.textPrimary },
-  readyDesc: { fontSize: 16, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 24 },
+  readyTitle: { fontSize: 36, fontWeight: '900', color: colors.textPrimary },
+  readyDesc: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', lineHeight: 24 },
   startBtn: { width: '100%', borderRadius: RADIUS.lg, overflow: 'hidden' },
   startGrad: { paddingVertical: SPACING.md + 6, alignItems: 'center' },
   startText: { fontSize: 22, fontWeight: '900', color: '#0A0800' },
   backBtn: { paddingVertical: SPACING.sm },
-  backText: { fontSize: 15, color: COLORS.textSecondary },
+  backText: { fontSize: 15, color: colors.textSecondary },
 
   // Done
   doneEmoji: { fontSize: 60 },
-  doneTitle: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary },
+  doneTitle: { fontSize: 28, fontWeight: '900', color: colors.textPrimary },
   scoreBadge: { borderRadius: RADIUS.md, paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm },
   doneScore: { fontSize: 42, fontWeight: '900', color: '#0A0800' },
   doneStats: { flexDirection: 'row', gap: SPACING.sm, width: '100%' },
-  doneStatCard: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, alignItems: 'center', borderWidth: 1, borderColor: COLORS.bgCardLight },
+  doneStatCard: { flex: 1, backgroundColor: colors.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, alignItems: 'center', borderWidth: 1, borderColor: colors.bgCardLight },
   doneStatEmoji: { fontSize: 20 },
-  doneStatValue: { fontSize: 24, fontWeight: '900', color: COLORS.textPrimary },
-  doneStatLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '700' },
+  doneStatValue: { fontSize: 24, fontWeight: '900', color: colors.textPrimary },
+  doneStatLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: '700' },
 
   // Top bar
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: SPACING.lg, paddingTop: 56, paddingBottom: SPACING.md },
-  topLabel: { fontSize: 10, color: COLORS.textSecondary, fontWeight: '800', letterSpacing: 2 },
-  topValue: { fontSize: 24, fontWeight: '900', color: COLORS.textPrimary },
+  topLabel: { fontSize: 10, color: colors.textSecondary, fontWeight: '800', letterSpacing: 2 },
+  topValue: { fontSize: 24, fontWeight: '900', color: colors.textPrimary },
 
-  timerCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.bgCard, borderWidth: 2, borderColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
-  timerUrgent: { borderColor: COLORS.error, backgroundColor: COLORS.error + '22' },
-  timerText: { fontSize: 26, fontWeight: '900', color: COLORS.primary },
-  timerTextUrgent: { color: COLORS.error },
+  timerCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.bgCard, borderWidth: 2, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  timerUrgent: { borderColor: colors.error, backgroundColor: colors.error + '22' },
+  timerText: { fontSize: 26, fontWeight: '900', color: colors.primary },
+  timerTextUrgent: { color: colors.error },
 
   // Listening
   listeningWrap: { alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.xl },
   listeningCircle: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center' },
   listeningEmoji: { fontSize: 40 },
-  listeningText: { fontSize: 15, color: COLORS.textSecondary, fontWeight: '600' },
+  listeningText: { fontSize: 15, color: colors.textSecondary, fontWeight: '600' },
 
   // Result flash
   resultFlash: { position: 'absolute', top: '40%', alignSelf: 'center', zIndex: 10 },
@@ -317,11 +322,11 @@ const styles = StyleSheet.create({
 
   // Choices
   choicesGrid: { flex: 1, justifyContent: 'center', paddingHorizontal: SPACING.lg, gap: SPACING.sm },
-  choiceBtn: { backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.lg, borderWidth: 1.5, borderColor: COLORS.bgCardLight, gap: 2 },
-  choiceName: { fontSize: 18, fontWeight: '800', color: COLORS.textPrimary },
-  choiceArtist: { fontSize: 13, color: COLORS.textSecondary },
+  choiceBtn: { backgroundColor: colors.bgCard, borderRadius: RADIUS.md, padding: SPACING.lg, borderWidth: 1.5, borderColor: colors.bgCardLight, gap: 2 },
+  choiceName: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },
+  choiceArtist: { fontSize: 13, color: colors.textSecondary },
 
   // Stats bar
   statsBar: { flexDirection: 'row', justifyContent: 'center', gap: SPACING.xl, paddingVertical: SPACING.lg },
-  statItem: { fontSize: 18, fontWeight: '700', color: COLORS.textSecondary },
+  statItem: { fontSize: 18, fontWeight: '700', color: colors.textSecondary },
 });

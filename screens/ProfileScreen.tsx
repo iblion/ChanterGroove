@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Dimensions } from 'react-native';
+import PatternBackdrop from '../components/PatternBackdrop';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
+import { ColorTokens, SPACING, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { getProfile, saveProfile, UserProfile, getStats } from '../services/storage';
 import { triggerHaptic } from '../services/sounds';
 
@@ -14,6 +16,8 @@ const AVATARS = [
 ];
 
 export default function ProfileScreen({ navigation }: any) {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [profile, setProfile] = useState<UserProfile>({ name: 'Player', avatar: '🥁', createdAt: Date.now() });
   const [totalGames, setTotalGames] = useState(0);
   const [bestScore, setBestScore] = useState(0);
@@ -37,11 +41,11 @@ export default function ProfileScreen({ navigation }: any) {
   }
 
   return (
-    <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
+    <PatternBackdrop style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Avatar */}
         <View style={styles.avatarSection}>
-          <LinearGradient colors={GRADIENTS.primary} style={styles.bigAvatar}>
+          <LinearGradient colors={gradients.primary} style={styles.bigAvatar}>
             <Text style={styles.bigAvatarText}>{profile.avatar}</Text>
           </LinearGradient>
           <Text style={styles.sectionTitle}>Choose Avatar</Text>
@@ -67,7 +71,7 @@ export default function ProfileScreen({ navigation }: any) {
             value={profile.name}
             onChangeText={(text) => handleSave({ ...profile, name: text })}
             placeholder="Enter your name…"
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             maxLength={20}
           />
         </View>
@@ -88,33 +92,33 @@ export default function ProfileScreen({ navigation }: any) {
           <Text style={styles.viewStatsText}>📊  View Full Stats</Text>
         </TouchableOpacity>
       </ScrollView>
-    </LinearGradient>
+    </PatternBackdrop>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: SPACING.lg, paddingTop: SPACING.xxl, gap: SPACING.lg },
 
   avatarSection: { alignItems: 'center', gap: SPACING.md },
-  bigAvatar: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', shadowColor: COLORS.primary, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10 },
+  bigAvatar: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', shadowColor: colors.primary, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10 },
   bigAvatarText: { fontSize: 60 },
 
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: COLORS.textPrimary },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
 
   avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, justifyContent: 'center' },
-  avatarOption: { width: 52, height: 52, borderRadius: 26, backgroundColor: COLORS.bgCard, borderWidth: 1.5, borderColor: COLORS.bgCardLight, alignItems: 'center', justifyContent: 'center' },
-  avatarSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '22' },
+  avatarOption: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.bgCard, borderWidth: 1.5, borderColor: colors.bgCardLight, alignItems: 'center', justifyContent: 'center' },
+  avatarSelected: { borderColor: colors.primary, backgroundColor: colors.primary + '22' },
   avatarEmoji: { fontSize: 26 },
 
   nameSection: { gap: SPACING.sm },
-  nameInput: { backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, color: COLORS.textPrimary, fontSize: 18, fontWeight: '700', borderWidth: 1.5, borderColor: COLORS.bgCardLight, textAlign: 'center' },
+  nameInput: { backgroundColor: colors.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, color: colors.textPrimary, fontSize: 18, fontWeight: '700', borderWidth: 1.5, borderColor: colors.bgCardLight, textAlign: 'center' },
 
   statsRow: { flexDirection: 'row', gap: SPACING.sm },
-  statCard: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.lg, alignItems: 'center', borderWidth: 1, borderColor: COLORS.bgCardLight },
-  statValue: { fontSize: 28, fontWeight: '900', color: COLORS.primary },
-  statLabel: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600', marginTop: 4 },
+  statCard: { flex: 1, backgroundColor: colors.bgCard, borderRadius: RADIUS.md, padding: SPACING.lg, alignItems: 'center', borderWidth: 1, borderColor: colors.bgCardLight },
+  statValue: { fontSize: 28, fontWeight: '900', color: colors.primary },
+  statLabel: { fontSize: 12, color: colors.textSecondary, fontWeight: '600', marginTop: 4 },
 
   viewStatsBtn: { alignItems: 'center', paddingVertical: SPACING.md },
-  viewStatsText: { fontSize: 16, fontWeight: '700', color: COLORS.primary },
+  viewStatsText: { fontSize: 16, fontWeight: '700', color: colors.primary },
 });

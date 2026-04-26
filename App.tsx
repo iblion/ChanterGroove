@@ -5,9 +5,10 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AppNavigator from './navigation/AppNavigator';
 import OnboardingScreen, { isOnboardingComplete } from './screens/OnboardingScreen';
-import { COLORS, GRADIENTS } from './constants/theme';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
-export default function App() {
+function AppShell() {
+  const { mode, colors, gradients } = useTheme();
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -21,11 +22,13 @@ export default function App() {
     setLoading(false);
   }
 
+  const statusStyle = mode === 'dark' ? 'light' : 'dark';
+
   if (loading) {
     return (
-      <LinearGradient colors={GRADIENTS.bgMain} style={styles.loading}>
-        <StatusBar style="light" />
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <LinearGradient colors={gradients.bgMain} style={styles.loading}>
+        <StatusBar style={statusStyle} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </LinearGradient>
     );
   }
@@ -33,7 +36,7 @@ export default function App() {
   if (showOnboarding) {
     return (
       <>
-        <StatusBar style="light" />
+        <StatusBar style={statusStyle} />
         <OnboardingScreen onComplete={() => setShowOnboarding(false)} />
       </>
     );
@@ -41,9 +44,17 @@ export default function App() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={statusStyle} />
       <AppNavigator />
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
   );
 }
 

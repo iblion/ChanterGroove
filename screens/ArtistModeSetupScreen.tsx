@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import PatternBackdrop from '../components/PatternBackdrop';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, GRADIENTS, SPACING, RADIUS, DIFFICULTY } from '../constants/theme';
+import { ColorTokens, SPACING, RADIUS, DIFFICULTY } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { getAvailableArtists } from '../services/mockData';
 
 const { width } = Dimensions.get('window');
@@ -12,6 +14,8 @@ const ARTIST_EMOJIS: Record<string, string> = {
 };
 
 export default function ArtistModeSetupScreen({ navigation }: any) {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const artists = getAvailableArtists(4);
 
   function startGame(artist: { name: string; count: number; genre: string }) {
@@ -25,7 +29,7 @@ export default function ArtistModeSetupScreen({ navigation }: any) {
   }
 
   return (
-    <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
+    <PatternBackdrop style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>🎤 Artist Mode</Text>
         <Text style={styles.subtitle}>Guess songs by your favorite artist</Text>
@@ -39,7 +43,7 @@ export default function ArtistModeSetupScreen({ navigation }: any) {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={GRADIENTS.bgCard}
+                colors={gradients.bgCard}
                 style={styles.cardInner}
               >
                 <Text style={styles.cardEmoji}>{ARTIST_EMOJIS[artist.name] || '🎵'}</Text>
@@ -57,26 +61,26 @@ export default function ArtistModeSetupScreen({ navigation }: any) {
           </View>
         )}
       </ScrollView>
-    </LinearGradient>
+    </PatternBackdrop>
   );
 }
 
 const CARD_WIDTH = (width - SPACING.lg * 2 - SPACING.sm) / 2;
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: SPACING.lg, paddingTop: SPACING.xxl, paddingBottom: 40 },
-  title: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary },
-  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginBottom: SPACING.xl },
+  title: { fontSize: 28, fontWeight: '900', color: colors.textPrimary },
+  subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: SPACING.xl },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  card: { width: CARD_WIDTH, borderRadius: RADIUS.lg, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.bgCardLight },
+  card: { width: CARD_WIDTH, borderRadius: RADIUS.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.bgCardLight },
   cardInner: { padding: SPACING.lg, alignItems: 'center', gap: SPACING.xs },
   cardEmoji: { fontSize: 40 },
-  cardName: { fontSize: 16, fontWeight: '800', color: COLORS.textPrimary, textAlign: 'center' },
-  cardCount: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600' },
+  cardName: { fontSize: 16, fontWeight: '800', color: colors.textPrimary, textAlign: 'center' },
+  cardCount: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
 
   empty: { alignItems: 'center', paddingVertical: SPACING.xxl, gap: SPACING.md },
   emptyEmoji: { fontSize: 50 },
-  emptyText: { fontSize: 15, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22 },
+  emptyText: { fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 22 },
 });

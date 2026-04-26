@@ -1,12 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
+import { ColorTokens, SPACING, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { getStats, UserStats } from '../services/storage';
-
-const { width } = Dimensions.get('window');
+import GanGanDrumIcon from '../components/GanGanDrumIcon';
+import PatternBackdrop from '../components/PatternBackdrop';
+import DistributionBar from '../components/DistributionBar';
 
 export default function StatsScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const StatBox = ({ label, value, accent }: { label: string; value: string; accent?: boolean }) => (
+    <View style={styles.statBox}>
+      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, accent && { color: colors.primary }]}>{value}</Text>
+    </View>
+  );
   const [stats, setStats] = useState<UserStats | null>(null);
 
   useEffect(() => {
@@ -14,9 +25,9 @@ export default function StatsScreen() {
   }, []);
 
   if (!stats) return (
-    <LinearGradient colors={GRADIENTS.bgMain} style={styles.center}>
+    <PatternBackdrop style={styles.center}>
       <Text style={styles.loadingText}>Loading stats…</Text>
-    </LinearGradient>
+    </PatternBackdrop>
   );
 
   const genreEntries = Object.entries(stats.genreBreakdown);
@@ -26,26 +37,34 @@ export default function StatsScreen() {
   const maxAttemptValue = Math.max(...attemptEntries.map(([, v]) => v), 1);
 
   return (
-    <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
+    <PatternBackdrop style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>📊 Your Stats</Text>
+        <View style={styles.brandRow}>
+          <GanGanDrumIcon size={22} color={colors.primary} accent={colors.primaryLight} stroke={1.6} />
+          <Text style={styles.brandText}>STATS</Text>
+        </View>
+        <View style={styles.titleRow}>
+          <View style={styles.kickerDot} />
+          <Text style={styles.kicker}>YOUR PERFORMANCE</Text>
+        </View>
+        <Text style={styles.title}>The numbers.</Text>
 
         {/* Main stats */}
         <View style={styles.gridRow}>
-          <StatBox label="Games" value={String(stats.totalGames)} emoji="🎮" />
-          <StatBox label="Total Pts" value={stats.totalPoints.toLocaleString()} emoji="⭐" />
+          <StatBox label="GAMES" value={String(stats.totalGames)} />
+          <StatBox label="TOTAL PTS" value={stats.totalPoints.toLocaleString()} accent />
         </View>
         <View style={styles.gridRow}>
-          <StatBox label="Accuracy" value={`${stats.accuracy}%`} emoji="🎯" />
-          <StatBox label="Avg Score" value={stats.averageScore.toLocaleString()} emoji="📈" />
+          <StatBox label="ACCURACY" value={`${stats.accuracy}%`} accent />
+          <StatBox label="AVG SCORE" value={stats.averageScore.toLocaleString()} />
         </View>
         <View style={styles.gridRow}>
-          <StatBox label="Best Score" value={stats.bestScore.toLocaleString()} emoji="🏆" />
-          <StatBox label="Best Streak" value={String(stats.bestStreak)} emoji="🔥" />
+          <StatBox label="BEST SCORE" value={stats.bestScore.toLocaleString()} accent />
+          <StatBox label="BEST STREAK" value={String(stats.bestStreak)} />
         </View>
         <View style={styles.gridRow}>
-          <StatBox label="Daily Streak" value={String(stats.dailyStreak)} emoji="📅" />
-          <StatBox label="Correct" value={`${stats.totalCorrect}/${stats.totalRounds}`} emoji="✅" />
+          <StatBox label="DAILY STREAK" value={String(stats.dailyStreak)} />
+          <StatBox label="CORRECT" value={`${stats.totalCorrect}/${stats.totalRounds}`} />
         </View>
 
         {/* Genre breakdown */}
@@ -84,18 +103,33 @@ export default function StatsScreen() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Attempt Distribution</Text>
-          {attemptEntries.map(([attemptLabel, count]) => (
-            <View key={attemptLabel} style={styles.genreRow}>
-              <View style={styles.genreInfo}>
-                <Text style={styles.genreName}>{attemptLabel === 'fail' ? 'Missed' : `Solved in ${attemptLabel}`}</Text>
-                <Text style={styles.genreDetail}>{count}</Text>
-              </View>
-              <View style={styles.genreBarBg}>
-                <View style={[styles.genreBarFill, { width: `${(count / maxAttemptValue) * 100}%` }]} />
-              </View>
-            </View>
-          ))}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>GUESS DISTRIBUTION</Text>
+            <Text style={styles.sectionDim}>{attemptEntries.reduce((s, [, v]) => s + v, 0)} games</Text>
+          </View>
+          <View style={styles.distStack}>
+            {[
+              { key: '1', label: '1' },
+              { key: '2', label: '2' },
+              { key: '3', label: '3' },
+              { key: '4', label: '4' },
+              { key: '5', label: '5' },
+              { key: '6', label: '6' },
+              { key: 'fail', label: 'X' },
+            ].map(({ key, label }) => {
+              const count = (stats.attemptDistribution as any)?.[key] ?? 0;
+              const isMax = count === maxAttemptValue && count > 0;
+              return (
+                <DistributionBar
+                  key={key}
+                  label={label}
+                  value={count}
+                  max={maxAttemptValue}
+                  highlight={isMax}
+                />
+              );
+            })}
+          </View>
         </View>
 
         {/* Recent games */}
@@ -119,56 +153,70 @@ export default function StatsScreen() {
 
         {stats.totalGames === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🎵</Text>
-            <Text style={styles.emptyText}>Play your first game to see stats!</Text>
+            <Text style={styles.emptyText}>Play your first game to see stats.</Text>
           </View>
         )}
       </ScrollView>
-    </LinearGradient>
+    </PatternBackdrop>
   );
 }
 
-function StatBox({ label, value, emoji }: { label: string; value: string; emoji: string }) {
+function StatBox({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <View style={styles.statBox}>
-      <Text style={styles.statEmoji}>{emoji}</Text>
-      <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, accent && { color: colors.primary }]}>{value}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: COLORS.textSecondary, fontSize: 16 },
-  scroll: { padding: SPACING.lg, paddingTop: SPACING.xxl, paddingBottom: 40 },
-  title: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary, marginBottom: SPACING.lg },
+  loadingText: { color: colors.textSecondary, fontSize: 16 },
+  scroll: { padding: SPACING.md, paddingTop: 56, paddingBottom: 40 },
+
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.lg },
+  brandText: { fontSize: 12, fontWeight: '900', color: colors.textPrimary, letterSpacing: 1.4 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  kickerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.hot },
+  kicker: { fontSize: 11, fontWeight: '800', color: colors.hot, letterSpacing: 1.6 },
+  title: { fontSize: 36, fontWeight: '900', color: colors.textPrimary, letterSpacing: -1, marginBottom: SPACING.lg, marginTop: 4 },
 
   gridRow: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.sm },
-  statBox: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, alignItems: 'center', borderWidth: 1, borderColor: COLORS.bgCardLight, gap: 2 },
-  statEmoji: { fontSize: 20 },
-  statValue: { fontSize: 22, fontWeight: '900', color: COLORS.textPrimary },
-  statLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '700', letterSpacing: 1 },
+  statBox: {
+    flex: 1, backgroundColor: colors.bgCard, borderRadius: RADIUS.lg,
+    padding: SPACING.md, gap: 4,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  statValue: { fontSize: 22, fontWeight: '900', color: colors.textPrimary, fontVariant: ['tabular-nums'] },
+  statLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '800', letterSpacing: 1.4 },
 
   section: { marginTop: SPACING.xl, gap: SPACING.sm },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.xs },
+  sectionTitle: { fontSize: 11, fontWeight: '800', color: colors.textMuted, marginBottom: SPACING.xs, letterSpacing: 1.4 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: SPACING.xs },
+  sectionDim: { fontSize: 11, color: colors.textMuted, fontWeight: '700', letterSpacing: 0.6 },
+  distStack: { gap: SPACING.sm },
 
-  genreRow: { gap: 4 },
+  genreRow: { gap: 6, paddingVertical: 6 },
   genreInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  genreName: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary, textTransform: 'capitalize' },
-  genreDetail: { fontSize: 12, color: COLORS.textSecondary },
-  genreBarBg: { height: 6, backgroundColor: COLORS.bgCardLight, borderRadius: 3 },
-  genreBarFill: { height: 6, backgroundColor: COLORS.primary, borderRadius: 3 },
+  genreName: { fontSize: 14, fontWeight: '800', color: colors.textPrimary, textTransform: 'capitalize' },
+  genreDetail: { fontSize: 11, color: colors.textSecondary, fontWeight: '600' },
+  genreBarBg: { height: 4, backgroundColor: colors.bgPanel, borderRadius: 2, overflow: 'hidden' },
+  genreBarFill: { height: 4, backgroundColor: colors.primary, borderRadius: 2 },
 
-  recentRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, borderWidth: 1, borderColor: COLORS.bgCardLight },
-  recentGenre: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary, textTransform: 'capitalize' },
-  recentDate: { fontSize: 12, color: COLORS.textSecondary },
+  recentRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.bgCard, borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  recentGenre: { fontSize: 13, fontWeight: '800', color: colors.textPrimary, textTransform: 'capitalize', letterSpacing: 0.4 },
+  recentDate: { fontSize: 11, color: colors.textSecondary },
   recentStats: { alignItems: 'flex-end' },
-  recentScore: { fontSize: 18, fontWeight: '900', color: COLORS.primary },
-  recentAccuracy: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600' },
+  recentScore: { fontSize: 16, fontWeight: '900', color: colors.primary, fontVariant: ['tabular-nums'] },
+  recentAccuracy: { fontSize: 11, color: colors.textSecondary, fontWeight: '700' },
 
   emptyState: { alignItems: 'center', paddingVertical: SPACING.xxl, gap: SPACING.md },
-  emptyEmoji: { fontSize: 60 },
-  emptyText: { fontSize: 16, color: COLORS.textSecondary, fontWeight: '600' },
+  emptyText: { fontSize: 14, color: colors.textSecondary, fontWeight: '600' },
 });

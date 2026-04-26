@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
+import { ColorTokens, SPACING, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { getTopScores, LeaderboardEntry } from '../services/leaderboard';
-
-const { width } = Dimensions.get('window');
+import GanGanDrumIcon from '../components/GanGanDrumIcon';
+import PatternBackdrop from '../components/PatternBackdrop';
+import SegmentedToggle from '../components/SegmentedToggle';
 
 export default function LeaderboardScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [modeFilter, setModeFilter] = useState<'all' | 'solo' | 'daily' | 'speed'>('all');
+  const [modeFilter, setModeFilter] = useState<'all' | 'solo' | 'daily' | 'speed' | 'lyrics'>('all');
+  const [scope, setScope] = useState<'global' | 'friends'>('global');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,25 +29,46 @@ export default function LeaderboardScreen() {
 
   if (loading) {
     return (
-      <LinearGradient colors={GRADIENTS.bgMain} style={styles.center}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <PatternBackdrop style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading leaderboard…</Text>
-      </LinearGradient>
+      </PatternBackdrop>
     );
   }
 
   const filteredEntries = entries.filter((entry) => modeFilter === 'all' || entry.mode === modeFilter);
 
   return (
-    <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
+    <PatternBackdrop style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>🏆 Leaderboard</Text>
+        <View style={styles.brandRow}>
+          <GanGanDrumIcon size={22} color={colors.primary} accent={colors.primaryLight} stroke={1.6} />
+          <Text style={styles.brandText}>LEADERBOARD</Text>
+        </View>
+        <View style={styles.titleRow}>
+          <View style={styles.kickerDot} />
+          <Text style={styles.kicker}>TOP 50 · {scope.toUpperCase()}</Text>
+        </View>
+        <Text style={styles.title}>The board.</Text>
+
+        <View style={styles.scopeToggleWrap}>
+          <SegmentedToggle
+            segments={[
+              { id: 'global', label: 'Global' },
+              { id: 'friends', label: 'Friends' },
+            ]}
+            value={scope}
+            onChange={setScope}
+          />
+        </View>
+
         <View style={styles.filterRow}>
-          {(['all', 'solo', 'daily', 'speed'] as const).map((mode) => (
+          {(['all', 'solo', 'daily', 'speed', 'lyrics'] as const).map((mode) => (
             <TouchableOpacity
               key={mode}
               style={[styles.filterChip, modeFilter === mode && styles.filterChipActive]}
               onPress={() => setModeFilter(mode)}
+              activeOpacity={0.85}
             >
               <Text style={[styles.filterChipText, modeFilter === mode && styles.filterChipTextActive]}>
                 {mode.toUpperCase()}
@@ -51,35 +77,29 @@ export default function LeaderboardScreen() {
           ))}
         </View>
 
-        {filteredEntries.length === 0 ? (
+        {scope === 'friends' ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🎵</Text>
-            <Text style={styles.emptyText}>No scores yet. Play a game to be first!</Text>
+            <Text style={styles.emptyText}>Friends leaderboard coming soon.{'\n'}Invite a friend from Settings to compare scores.</Text>
+          </View>
+        ) : filteredEntries.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No scores yet. Play a game to be first.</Text>
           </View>
         ) : (
           filteredEntries.map((entry, index) => {
-            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : null;
             const isTop3 = index < 3;
-
             return (
               <View key={entry.id || index} style={[styles.row, isTop3 && styles.rowTop3]}>
                 <View style={styles.rankCol}>
-                  {medal ? (
-                    <Text style={styles.medal}>{medal}</Text>
-                  ) : (
-                    <Text style={styles.rankNum}>{index + 1}</Text>
-                  )}
+                  <Text style={[styles.rankNum, isTop3 && styles.rankNumTop3]}>{index + 1}</Text>
                 </View>
-
                 <View style={styles.avatarCol}>
-                  <Text style={styles.avatar}>{entry.avatar || '🥁'}</Text>
+                  <Text style={styles.avatar}>{entry.avatar || '◐'}</Text>
                 </View>
-
                 <View style={styles.infoCol}>
                   <Text style={styles.playerName} numberOfLines={1}>{entry.playerName}</Text>
                   <Text style={styles.genreLabel}>{entry.genre} · {entry.difficulty}</Text>
                 </View>
-
                 <View style={styles.scoreCol}>
                   <Text style={[styles.score, isTop3 && styles.scoreTop3]}>{entry.score.toLocaleString()}</Text>
                 </View>
@@ -88,50 +108,58 @@ export default function LeaderboardScreen() {
           })
         )}
       </ScrollView>
-    </LinearGradient>
+    </PatternBackdrop>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: COLORS.textSecondary, marginTop: SPACING.md, fontSize: 14 },
-  scroll: { padding: SPACING.lg, paddingTop: SPACING.xxl, paddingBottom: 40 },
-  title: { fontSize: 28, fontWeight: '900', color: COLORS.textPrimary, marginBottom: SPACING.lg },
-  filterRow: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.md },
-  filterChip: { paddingHorizontal: SPACING.sm + 2, paddingVertical: 6, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.bgCardLight, backgroundColor: COLORS.bgCard },
-  filterChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '20' },
-  filterChipText: { color: COLORS.textSecondary, fontSize: 11, fontWeight: '700' },
-  filterChipTextActive: { color: COLORS.primary },
+  loadingText: { color: colors.textSecondary, marginTop: SPACING.md, fontSize: 14 },
+  scroll: { padding: SPACING.md, paddingTop: 56, paddingBottom: 40 },
+
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: SPACING.lg },
+  brandText: { fontSize: 12, fontWeight: '900', color: colors.textPrimary, letterSpacing: 1.4 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  kickerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.hot },
+  kicker: { fontSize: 11, fontWeight: '800', color: colors.hot, letterSpacing: 1.6 },
+  title: { fontSize: 36, fontWeight: '900', color: colors.textPrimary, letterSpacing: -1, marginTop: 4, marginBottom: SPACING.lg },
+
+  scopeToggleWrap: { marginBottom: SPACING.md },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: SPACING.md },
+  filterChip: {
+    paddingHorizontal: SPACING.md, paddingVertical: 7,
+    borderRadius: RADIUS.full,
+    backgroundColor: colors.bgPanel,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  filterChipActive: { borderColor: colors.primary, backgroundColor: colors.warmOverlay },
+  filterChipText: { color: colors.textSecondary, fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  filterChipTextActive: { color: colors.primary },
 
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.bgCardLight,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.bgCard, borderRadius: RADIUS.lg,
+    padding: SPACING.md, marginBottom: 6,
+    borderWidth: 1, borderColor: colors.border,
   },
-  rowTop3: { borderColor: COLORS.primary + '44', backgroundColor: COLORS.primary + '08' },
+  rowTop3: { borderColor: colors.primary + '55', backgroundColor: colors.warmOverlay },
 
-  rankCol: { width: 36, alignItems: 'center' },
-  medal: { fontSize: 22 },
-  rankNum: { fontSize: 16, fontWeight: '800', color: COLORS.textSecondary },
+  rankCol: { width: 28, alignItems: 'center' },
+  rankNum: { fontSize: 14, fontWeight: '900', color: colors.textMuted, fontVariant: ['tabular-nums'] },
+  rankNumTop3: { color: colors.primary },
 
-  avatarCol: { width: 40, alignItems: 'center' },
-  avatar: { fontSize: 24 },
+  avatarCol: { width: 36, alignItems: 'center' },
+  avatar: { fontSize: 18 },
 
   infoCol: { flex: 1, marginLeft: SPACING.sm },
-  playerName: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
-  genreLabel: { fontSize: 11, color: COLORS.textSecondary, textTransform: 'capitalize' },
+  playerName: { fontSize: 14, fontWeight: '800', color: colors.textPrimary },
+  genreLabel: { fontSize: 11, color: colors.textSecondary, textTransform: 'capitalize' },
 
   scoreCol: { alignItems: 'flex-end' },
-  score: { fontSize: 18, fontWeight: '800', color: COLORS.textSecondary },
-  scoreTop3: { color: COLORS.primary },
+  score: { fontSize: 16, fontWeight: '900', color: colors.textSecondary, fontVariant: ['tabular-nums'] },
+  scoreTop3: { color: colors.primary },
 
   emptyState: { alignItems: 'center', paddingVertical: SPACING.xxl, gap: SPACING.md },
-  emptyEmoji: { fontSize: 50 },
-  emptyText: { fontSize: 15, color: COLORS.textSecondary, textAlign: 'center' },
+  emptyText: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
 });

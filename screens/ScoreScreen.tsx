@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Share, Dimensions, Modal } from 'react-native';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import {
+  View, Text, StyleSheet, TouchableOpacity, Animated, Share, ScrollView,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
+import { ColorTokens, SPACING, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { saveGameResult, GameResult } from '../services/storage';
 import { checkAchievements, Achievement } from '../services/achievements';
 import { generateShareText } from '../services/shareResults';
@@ -9,17 +12,19 @@ import { playAchievementSound } from '../services/sounds';
 import { submitScore } from '../services/leaderboard';
 import { updateScore } from '../services/multiplayer';
 import Confetti from '../components/Confetti';
+import GanGanDrumIcon from '../components/GanGanDrumIcon';
+import PatternBackdrop from '../components/PatternBackdrop';
 
-const { height } = Dimensions.get('window');
-
-function getRank(score: number) {
-  if (score >= 8000) return { label: 'Gangan Master 👑', color: COLORS.primary };
-  if (score >= 5000) return { label: 'Afrobeat Wizard 🔥', color: COLORS.hot };
-  if (score >= 2000) return { label: 'Groove Rider 🌍', color: COLORS.accent };
-  return { label: 'Fresh Listener 🎧', color: COLORS.textSecondary };
+function getRank(score: number, colors: ColorTokens) {
+  if (score >= 8000) return { label: 'Gangan Master', tone: colors.primary };
+  if (score >= 5000) return { label: 'Afrobeat Wizard', tone: colors.hot };
+  if (score >= 2000) return { label: 'Groove Rider', tone: colors.success };
+  return { label: 'Fresh Listener', tone: colors.textSecondary };
 }
 
 export default function ScoreScreen({ navigation, route }: any) {
+  const { colors, gradients } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const {
     score,
     genre,
@@ -31,26 +36,18 @@ export default function ScoreScreen({ navigation, route }: any) {
     correctRounds = 0,
     roundResults = [],
   } = route.params;
-  const rank       = getRank(score);
+  const rank       = getRank(score, colors);
   const accuracy   = totalRounds > 0 ? Math.round((correctRounds / totalRounds) * 100) : 0;
-  const bounceAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim   = useRef(new Animated.Value(0)).current;
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [showAchievement, setShowAchievement] = useState(false);
 
-  // Build attempt summary for sharing
   const allAttempts = roundResults.flatMap((r: any) => r.attempts || []);
 
   useEffect(() => {
-    // Animate
-    Animated.sequence([
-      Animated.timing(fadeAnim,   { toValue: 1, duration: 500, useNativeDriver: true }),
-      Animated.spring(bounceAnim, { toValue: 1, friction: 4, tension: 40, useNativeDriver: true }),
-    ]).start();
-
-    // Save result & check achievements
+    Animated.timing(fadeAnim, { toValue: 1, duration: 360, useNativeDriver: true }).start();
     saveAndCheck();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function saveAndCheck() {
@@ -63,17 +60,13 @@ export default function ScoreScreen({ navigation, route }: any) {
       mode: mode || 'solo',
       totalRounds,
       correctRounds,
-      attempts: roundResults.length > 0
-        ? allAttempts
-        : [],
+      attempts: roundResults.length > 0 ? allAttempts : [],
     };
 
     await saveGameResult(result);
     if (mode === 'multi' && roomId && userId) {
       updateScore(roomId, userId, score).catch(() => {});
     }
-
-    // Submit to cloud leaderboard
     submitScore({
       score,
       genre: genre?.label || genre?.id || 'unknown',
@@ -81,10 +74,8 @@ export default function ScoreScreen({ navigation, route }: any) {
       mode: mode || 'solo',
     }).catch(() => {});
 
-    // Confetti on high scores
     if (score >= 5000) setShowConfetti(true);
 
-    // Check achievements
     const latest = {
       score,
       correctRounds,
@@ -97,7 +88,6 @@ export default function ScoreScreen({ navigation, route }: any) {
     const newlyUnlocked = await checkAchievements(latest);
     if (newlyUnlocked.length > 0) {
       setNewAchievements(newlyUnlocked);
-      setShowAchievement(true);
       playAchievementSound();
       setShowConfetti(true);
     }
@@ -115,102 +105,176 @@ export default function ScoreScreen({ navigation, route }: any) {
   }
 
   return (
-    <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
+    <PatternBackdrop style={styles.container}>
       <Confetti active={showConfetti} />
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        {/* Drum trophy */}
-        <Animated.View style={{ transform: [{ scale: bounceAnim }] }}>
-          <LinearGradient colors={GRADIENTS.primary} style={styles.trophyCircle}>
-            <Text style={styles.trophyEmoji}>🥁</Text>
-          </LinearGradient>
-        </Animated.View>
-
-        {/* Score */}
-        <View style={styles.scoreBlock}>
-          <Text style={styles.finalLabel}>FINAL SCORE</Text>
-          <LinearGradient colors={GRADIENTS.hot} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.scoreGrad}>
-            <Text style={styles.finalScore}>{score.toLocaleString()}</Text>
-          </LinearGradient>
-          <Text style={[styles.rank, { color: rank.color }]}>{rank.label}</Text>
-        </View>
-
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          <StatCard label="Genre"      value={`${genre?.emoji || '🎵'} ${genre?.label || ''}`} />
-          <StatCard label="Accuracy"   value={`${accuracy}%`} />
-          <StatCard label="Difficulty" value={`${difficulty?.emoji || '😤'} ${difficulty?.label || ''}`} />
-        </View>
-
-        {/* Round results emoji summary */}
-        {roundResults.length > 0 && (
-          <View style={styles.roundSummary}>
-            {roundResults.map((r: any, i: number) => (
-              <Text key={i} style={styles.roundEmoji}>{r.correct ? '🟩' : '🟥'}</Text>
-            ))}
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, gap: SPACING.md }}>
+          {/* Brand bar */}
+          <View style={styles.brandRow}>
+            <GanGanDrumIcon size={24} color={colors.primary} accent={colors.primaryLight} stroke={1.6} />
+            <Text style={styles.brandText}>RESULT · {(mode || 'solo').toUpperCase()}</Text>
           </View>
-        )}
 
-        {/* Achievement unlocked notification */}
-        {newAchievements.length > 0 && (
-          <TouchableOpacity style={styles.achievementBanner} onPress={() => navigation.navigate('Achievements')}>
-            <Text style={styles.achievementText}>
-              🏅 New: {newAchievements.map(a => `${a.emoji} ${a.name}`).join(', ')}
-            </Text>
-          </TouchableOpacity>
-        )}
+          {/* Hero score card */}
+          <View style={styles.heroCard}>
+            <View style={styles.watermark} pointerEvents="none">
+              <GanGanDrumIcon size={220} color={colors.primary} accent={colors.primaryLight} stroke={1.4} />
+            </View>
+            <View style={styles.heroContent}>
+              <View style={styles.kickerRow}>
+                <View style={styles.kickerDot} />
+                <Text style={styles.kicker}>FINAL SCORE</Text>
+              </View>
+              <Text style={styles.scoreValue}>{score.toLocaleString()}</Text>
+              <Text style={[styles.rank, { color: rank.tone }]}>{rank.label}</Text>
+              <View style={styles.heroDivider} />
+              <View style={styles.heroMetaRow}>
+                <View style={styles.metaItem}>
+                  <Text style={styles.metaLabel}>ACC</Text>
+                  <Text style={styles.metaValue}>{accuracy}%</Text>
+                </View>
+                <View style={styles.metaSep} />
+                <View style={styles.metaItem}>
+                  <Text style={styles.metaLabel}>HITS</Text>
+                  <Text style={styles.metaValue}>{correctRounds}/{totalRounds}</Text>
+                </View>
+                <View style={styles.metaSep} />
+                <View style={styles.metaItem}>
+                  <Text style={styles.metaLabel}>GENRE</Text>
+                  <Text style={styles.metaValueSmall} numberOfLines={1}>{genre?.label || '—'}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
 
-        {/* Buttons */}
-        <View style={styles.buttons}>
-          <TouchableOpacity style={styles.primaryBtn} onPress={() => navigation.replace('GameSetup', { mode: 'solo' })} activeOpacity={0.85}>
-            <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.btnGrad}>
-              <Text style={styles.btnText}>🔄  Play Again</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryBtn} onPress={handleShare} activeOpacity={0.85}>
-            <Text style={styles.secondaryText}>📤  Share Score</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.navigate('Home')}>
-            <Text style={styles.ghostText}>← Back to Home</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    </LinearGradient>
+          {/* Heardle grid */}
+          {roundResults.length > 0 && (
+            <View style={styles.panel}>
+              <View style={styles.panelHeader}>
+                <Text style={styles.panelTitle}>HEARDLE GRID</Text>
+                <Text style={styles.panelDim}>{(difficulty?.label || 'Medium').toUpperCase()}</Text>
+              </View>
+              <View style={styles.gridRow}>
+                {roundResults.map((r: any, i: number) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.gridCell,
+                      r.correct
+                        ? { backgroundColor: colors.success + '33', borderColor: colors.success }
+                        : { backgroundColor: colors.error + '22', borderColor: colors.error },
+                    ]}
+                  >
+                    <Text style={styles.gridCellText}>{r.correct ? '✓' : '×'}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* New achievements */}
+          {newAchievements.length > 0 && (
+            <TouchableOpacity style={styles.achievementBanner} onPress={() => navigation.navigate('Achievements')} activeOpacity={0.85}>
+              <Text style={styles.achievementKicker}>NEW BADGE</Text>
+              <Text style={styles.achievementText}>
+                {newAchievements.map(a => a.name).join(' · ')}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Action buttons */}
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={() => navigation.replace('GameSetup', { mode: 'solo' })}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.primaryGrad}>
+                <Text style={styles.primaryText}>PLAY AGAIN</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryBtn} onPress={handleShare} activeOpacity={0.85}>
+              <Text style={styles.secondaryText}>SHARE SCORE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ghostBtn} onPress={() => navigation.navigate('Home')}>
+              <Text style={styles.ghostText}>‹ BACK TO HOME</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </PatternBackdrop>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.statCard}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   container: { flex: 1 },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'space-between', paddingTop: height * 0.08, paddingBottom: height * 0.06, paddingHorizontal: SPACING.xl },
-  trophyCircle: { width: 140, height: 140, borderRadius: 70, alignItems: 'center', justifyContent: 'center', shadowColor: COLORS.primary, shadowOpacity: 0.5, shadowRadius: 30, elevation: 12 },
-  trophyEmoji: { fontSize: 70 },
-  scoreBlock: { alignItems: 'center', gap: SPACING.sm },
-  finalLabel: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '800', letterSpacing: 3, textTransform: 'uppercase' },
-  scoreGrad: { borderRadius: RADIUS.md, paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm },
-  finalScore: { fontSize: 52, fontWeight: '900', color: '#0A0800' },
-  rank: { fontSize: 20, fontWeight: '800' },
-  statsRow: { flexDirection: 'row', gap: SPACING.sm, width: '100%' },
-  statCard: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, padding: SPACING.md, alignItems: 'center', borderWidth: 1, borderColor: COLORS.bgCardLight },
-  statLabel: { fontSize: 10, color: COLORS.textSecondary, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
-  statValue: { fontSize: 13, color: COLORS.textPrimary, fontWeight: '800', marginTop: 4, textAlign: 'center' },
-  roundSummary: { flexDirection: 'row', gap: 3, flexWrap: 'wrap', justifyContent: 'center' },
-  roundEmoji: { fontSize: 20 },
-  achievementBanner: { backgroundColor: COLORS.primary + '22', borderRadius: RADIUS.full, paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm, borderWidth: 1, borderColor: COLORS.primary + '55' },
-  achievementText: { fontSize: 14, fontWeight: '700', color: COLORS.primary, textAlign: 'center' },
-  buttons: { width: '100%', gap: SPACING.md },
+  scroll: { padding: SPACING.md, paddingTop: 56, paddingBottom: 40 },
+
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  brandText: { color: colors.textMuted, fontSize: 11, fontWeight: '900', letterSpacing: 1.6 },
+
+  // Hero card
+  heroCard: {
+    backgroundColor: colors.bgCard,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1, borderColor: colors.border,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  watermark: { position: 'absolute', top: -40, right: -36, opacity: 0.08 },
+  heroContent: { padding: SPACING.xl, gap: 6 },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  kickerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.hot },
+  kicker: { fontSize: 11, fontWeight: '800', color: colors.hot, letterSpacing: 1.6 },
+  scoreValue: {
+    fontSize: 64, fontWeight: '900', color: colors.textPrimary,
+    fontVariant: ['tabular-nums'], letterSpacing: -2, marginTop: 4,
+  },
+  rank: { fontSize: 14, fontWeight: '800', letterSpacing: 0.6, marginTop: 2 },
+  heroDivider: { height: 1, backgroundColor: colors.border, marginTop: SPACING.md, marginBottom: SPACING.sm },
+  heroMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  metaItem: { flex: 1, gap: 2 },
+  metaLabel: { fontSize: 9, color: colors.textMuted, fontWeight: '800', letterSpacing: 1.4 },
+  metaValue: { fontSize: 16, fontWeight: '900', color: colors.textPrimary, fontVariant: ['tabular-nums'] },
+  metaValueSmall: { fontSize: 13, fontWeight: '800', color: colors.textPrimary },
+  metaSep: { width: 1, height: 28, backgroundColor: colors.border, marginHorizontal: SPACING.sm },
+
+  // Heardle panel
+  panel: {
+    backgroundColor: colors.bgCard, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: colors.border,
+    padding: SPACING.md, gap: SPACING.sm,
+  },
+  panelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  panelTitle: { fontSize: 11, color: colors.textMuted, fontWeight: '800', letterSpacing: 1.4 },
+  panelDim: { fontSize: 11, color: colors.textMuted, fontWeight: '700', letterSpacing: 1 },
+  gridRow: { flexDirection: 'row', gap: 4, flexWrap: 'wrap' },
+  gridCell: {
+    width: 30, height: 30, borderRadius: RADIUS.sm,
+    borderWidth: 1, alignItems: 'center', justifyContent: 'center',
+  },
+  gridCellText: { color: colors.textPrimary, fontSize: 13, fontWeight: '900' },
+
+  // Achievement
+  achievementBanner: {
+    backgroundColor: colors.warmOverlay,
+    borderWidth: 1, borderColor: colors.primary + '55',
+    borderRadius: RADIUS.lg, padding: SPACING.md, gap: 2,
+  },
+  achievementKicker: { color: colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.4 },
+  achievementText: { color: colors.textPrimary, fontSize: 14, fontWeight: '800' },
+
+  // Actions
+  actions: { gap: SPACING.sm, marginTop: SPACING.sm },
   primaryBtn: { borderRadius: RADIUS.lg, overflow: 'hidden' },
-  btnGrad: { paddingVertical: SPACING.md + 4, alignItems: 'center' },
-  btnText: { fontSize: 18, fontWeight: '900', color: '#0A0800' },
-  secondaryBtn: { paddingVertical: SPACING.md + 4, borderRadius: RADIUS.lg, borderWidth: 2, borderColor: COLORS.primary, alignItems: 'center' },
-  secondaryText: { fontSize: 18, fontWeight: '700', color: COLORS.primary },
+  primaryGrad: { paddingVertical: 16, alignItems: 'center' },
+  primaryText: { color: colors.onPrimary, fontSize: 14, fontWeight: '900', letterSpacing: 1.2 },
+  secondaryBtn: {
+    paddingVertical: 14, borderRadius: RADIUS.lg,
+    backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center',
+  },
+  secondaryText: { color: colors.textPrimary, fontSize: 12, fontWeight: '900', letterSpacing: 1.2 },
   ghostBtn: { alignItems: 'center', paddingVertical: SPACING.sm },
-  ghostText: { fontSize: 15, color: COLORS.textSecondary },
+  ghostText: { fontSize: 11, color: colors.textMuted, fontWeight: '800', letterSpacing: 1.2 },
 });
