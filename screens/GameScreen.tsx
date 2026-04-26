@@ -8,7 +8,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
 import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
 import { getMockTracks } from '../services/mockData';
+<<<<<<< HEAD
 import { SpotifyTrack } from '../services/spotify';
+=======
+import { fetchTracksForGame, getSpotifyLastError, SpotifyTrack } from '../services/spotify';
+>>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
 import { getFuzzySuggestions } from '../services/scoring';
 import { playCorrectSound, playWrongSound, playSkipSound, playGameOverSound, triggerHaptic } from '../services/sounds';
 
@@ -21,8 +25,15 @@ type GamePhase = 'loading' | 'listening' | 'guessing' | 'result' | 'paused';
 type AttemptResult = 'correct' | 'wrong' | 'skipped' | 'unused';
 
 export default function GameScreen({ navigation, route }: any) {
+<<<<<<< HEAD
   const { genre, decade, difficulty, mode } = route.params;
   const [tracks, setTracks]           = useState<SpotifyTrack[]>([]);
+=======
+  const { genre, decade, difficulty, mode, artistFilter } = route.params;
+  const [tracks, setTracks]           = useState<SpotifyTrack[]>([]);
+  const [spotifyTrackCount, setSpotifyTrackCount] = useState(0);
+  const [spotifyStatusNote, setSpotifyStatusNote] = useState('');
+>>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
   const [round, setRound]             = useState(0);
   const [score, setScore]             = useState(0);
   const [phase, setPhase]             = useState<GamePhase>('loading');
@@ -45,9 +56,52 @@ export default function GameScreen({ navigation, route }: any) {
 
   // ─── Init ───────────────────────────────────────────────────────────────
   useEffect(() => {
+<<<<<<< HEAD
     const genreId = genre?.id || genre?.spotifyGenre || undefined;
     setTracks(getMockTracks(TOTAL_ROUNDS, genreId));
     setPhase('listening');
+=======
+    let mounted = true;
+    const genreId = genre?.id || genre?.spotifyGenre || undefined;
+
+    async function loadTracks() {
+      try {
+        const spotifyTracks = await fetchTracksForGame({
+          genre: genre?.spotifyGenre || genreId,
+          artist: artistFilter,
+          decadeStart: decade?.years?.[0],
+          decadeEnd: decade?.years?.[1],
+          limit: 50,
+        });
+
+        if (!mounted) return;
+        setSpotifyTrackCount(spotifyTracks.length);
+        setSpotifyStatusNote(
+          spotifyTracks.length > 0
+            ? ''
+            : (getSpotifyLastError() || 'spotify returned no preview tracks')
+        );
+        if (spotifyTracks.length >= TOTAL_ROUNDS) {
+          setTracks(spotifyTracks.slice(0, TOTAL_ROUNDS));
+        } else {
+          // Keep any live Spotify tracks we found, and backfill with mock tracks.
+          const backfill = getMockTracks(TOTAL_ROUNDS - spotifyTracks.length, genreId);
+          setTracks([...spotifyTracks, ...backfill].slice(0, TOTAL_ROUNDS));
+        }
+      } catch (error) {
+        if (!mounted) return;
+        setSpotifyTrackCount(0);
+        const detailedError = getSpotifyLastError() || (error instanceof Error ? error.message : 'spotify request failed');
+        console.warn('[Spotify Debug]', detailedError);
+        setSpotifyStatusNote(detailedError);
+        setTracks(getMockTracks(TOTAL_ROUNDS, genreId));
+      } finally {
+        if (mounted) setPhase('listening');
+      }
+    }
+
+    loadTracks();
+>>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
     return () => { sound?.unloadAsync(); };
   }, []);
 
@@ -220,6 +274,11 @@ export default function GameScreen({ navigation, route }: any) {
   );
 
   const progressWidth = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+<<<<<<< HEAD
+=======
+  const isSpotifyLive = spotifyTrackCount > 0;
+  const sourceLabel = isSpotifyLive ? `Spotify Live (${spotifyTrackCount})` : 'Fallback Tracks';
+>>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
 
   return (
     <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
@@ -228,6 +287,19 @@ export default function GameScreen({ navigation, route }: any) {
         <View>
           <Text style={styles.roundLabel}>ROUND {round + 1} / {TOTAL_ROUNDS}</Text>
           <Text style={styles.genreText}>{genre.emoji} {genre.label}</Text>
+<<<<<<< HEAD
+=======
+          <View style={[styles.sourceBadge, isSpotifyLive ? styles.sourceBadgeLive : styles.sourceBadgeFallback]}>
+            <Text style={[styles.sourceBadgeText, isSpotifyLive ? styles.sourceBadgeTextLive : styles.sourceBadgeTextFallback]}>
+              {sourceLabel}
+            </Text>
+          </View>
+          {!!spotifyStatusNote && !isSpotifyLive && (
+            <Text style={styles.sourceDebugText} numberOfLines={2}>
+              {spotifyStatusNote}
+            </Text>
+          )}
+>>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
         </View>
         <View style={styles.headerRight}>
           <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.scoreBox}>
@@ -307,6 +379,19 @@ export default function GameScreen({ navigation, route }: any) {
 
             {/* Action buttons */}
             <View style={styles.actionRow}>
+<<<<<<< HEAD
+=======
+              <TouchableOpacity
+                onPress={() => {
+                  setUserInput('');
+                  setSuggestions([]);
+                  setPhase('listening');
+                }}
+                style={styles.replayBtn}
+              >
+                <Text style={styles.replayText}>🔁 Replay {clipDuration}s</Text>
+              </TouchableOpacity>
+>>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
               <TouchableOpacity onPress={handleSkip} style={styles.skipBtn}>
                 <Text style={styles.skipText}>⏭  Skip (+{CLIP_DURATIONS[Math.min(attempt + 1, MAX_ATTEMPTS - 1)]}s clip)</Text>
               </TouchableOpacity>
@@ -395,6 +480,16 @@ const styles = StyleSheet.create({
   scoreValue: { fontSize: 22, color: '#0A0800', fontWeight: '900' },
   pauseBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.bgCardLight, alignItems: 'center', justifyContent: 'center' },
   pauseIcon: { fontSize: 18 },
+<<<<<<< HEAD
+=======
+  sourceBadge: { marginTop: SPACING.xs, alignSelf: 'flex-start', borderRadius: RADIUS.full, paddingHorizontal: SPACING.sm, paddingVertical: 4, borderWidth: 1 },
+  sourceBadgeLive: { backgroundColor: COLORS.success + '22', borderColor: COLORS.success + '66' },
+  sourceBadgeFallback: { backgroundColor: COLORS.warning + '22', borderColor: COLORS.warning + '66' },
+  sourceBadgeText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.3 },
+  sourceBadgeTextLive: { color: COLORS.success },
+  sourceBadgeTextFallback: { color: COLORS.warning },
+  sourceDebugText: { marginTop: 4, maxWidth: width * 0.55, color: COLORS.textSecondary, fontSize: 10 },
+>>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
 
   // Attempt tracker
   attemptTracker: { flexDirection: 'row', paddingHorizontal: SPACING.lg, gap: 4, marginBottom: SPACING.sm },
@@ -425,7 +520,13 @@ const styles = StyleSheet.create({
   sugArtist: { color: COLORS.textSecondary, fontSize: 12 },
 
   // Actions
+<<<<<<< HEAD
   actionRow: { alignItems: 'center', paddingTop: SPACING.xs },
+=======
+  actionRow: { alignItems: 'center', paddingTop: SPACING.xs, gap: SPACING.sm },
+  replayBtn: { paddingVertical: SPACING.sm, paddingHorizontal: SPACING.lg, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.accent + '66', backgroundColor: COLORS.accent + '14' },
+  replayText: { color: COLORS.accent, fontSize: 14, fontWeight: '700' },
+>>>>>>> 430401b (Wire live music pipeline and improve gameplay UX)
   skipBtn: { paddingVertical: SPACING.sm, paddingHorizontal: SPACING.lg, borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.bgCardLight },
   skipText: { color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' },
 
