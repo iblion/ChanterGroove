@@ -132,8 +132,8 @@ export async function fetchTracksForGameDetailed(options: {
     : [
         `genre:${safeGenre}${yearFilter}`,
         `${safeGenre}${yearFilter}`,
-        `afrobeats${yearFilter}`,
-        `year:${safeDecadeStart || 2018}-${safeDecadeEnd || 2025}`,
+        // Removed the bare year-range query — it leaked unrelated genres
+        // (e.g. K-pop, country) when artist genre metadata was sparse.
       ];
 
   for (const query of queries) {
@@ -258,6 +258,57 @@ function shuffleArray<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
+// ─── Public iTunes enrichment ─────────────────────────────────────────────
+// Replace placeholder previewUrls (e.g. SoundHelix samples in MOCK_TRACKS)
+// with real iTunes preview URLs for the actual song. Used by Speed Mode and
+// any other path that wants to play *real* clips from a curated mock pool
+// without relying on Spotify search returning previews.
+//
+// Strategy:
+//   • For each track, look up an iTunes preview via track + artist.
+//   • If a real preview is found, replace previewUrl and tag as 'itunes'.
+//   • If not, drop the track (we'd rather have fewer real-music tracks
+//     than play SoundHelix tones). Caller can pass a larger pool to
+//     compensate.
+//   • Run lookups concurrently with a small fan-out cap so we don't
+//     hammer the iTunes endpoint.
+export async function enrichTracksWithItunesPreviews(
+  tracks: SpotifyTrack[],
+  limit: number,
+  options: { concurrency?: number; requireArtistMatch?: boolean } = {}
+): Promise<SpotifyTrack[]> {
+  const { concurrency = 4, requireArtistMatch = true } = options;
+  const pool = shuffleArray(tracks).slice(0, Math.max(limit * 3, 30));
+  const out: SpotifyTrack[] = [];
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < pool.length && out.length < limit) {
+      const track = pool[cursor++];
+      if (!track) continue;
+      try {
+        const preview = await findItunesPreviewUrl(track.name, track.artists[0], {
+          requireArtistMatch,
+          requireTrackMatch: true,
+        });
+        if (preview && out.length < limit) {
+          out.push({
+            ...track,
+            previewUrl: preview,
+            audioSource: 'itunes',
+          });
+        }
+      } catch {}
+    }
+  }
+
+  const workers = Array.from({ length: Math.max(1, Math.min(concurrency, 6)) }, () =>
+    worker()
+  );
+  await Promise.all(workers);
+  return out;
+}
+
 async function fillMissingPreviews(
   tracks: SpotifyTrack[],
   limit: number,
@@ -325,7 +376,7 @@ function matchesGenre(artistGenres: string[], wantedGenre: string): boolean {
   const aliases: Record<string, string[]> = {
     afrobeats: ['afrobeats', 'afrobeat', 'naija', 'nigerian pop', 'afro pop', 'afroswing', 'afrofusion', 'afro r&b', 'afro dancehall'],
     afropop: ['afropop', 'afro pop', 'nigerian pop', 'afrofusion', 'afroswing'],
-    amapiano: ['amapiano'],
+    amapiano: ['amapiano', 'south african house'],
     hiphop: ['hip hop', 'hip-hop', 'rap', 'trap'],
     rap: ['rap', 'hip hop', 'hip-hop', 'trap'],
     rnb: ['r&b', 'rnb', 'soul', 'neo soul'],
@@ -333,6 +384,14 @@ function matchesGenre(artistGenres: string[], wantedGenre: string): boolean {
     dancehall: ['dancehall'],
     rock: ['rock'],
     jazz: ['jazz'],
+    fuji: ['fuji', 'yoruba', 'apala', 'were'],
+    highlife: ['highlife', 'palm wine', 'afrobeat', 'ghanaian'],
+    juju: ['juju', 'yoruba', 'afrobeat'],
+    gospel: ['gospel', 'worship', 'christian', 'praise'],
+    reggae: ['reggae', 'roots reggae', 'dub', 'dancehall', 'rocksteady'],
+    'hausa-hiphop': ['hausa', 'arewa', 'northern', 'african hip hop'],
+    'bongo-flava': ['bongo flava', 'tanzanian', 'swahili', 'african'],
+    'coupe-decale': ['coupe decale', 'ivorian', 'zouglou', 'african dance'],
   };
   const needles = aliases[normalizedWanted] || [normalizedWanted];
   const haystack = artistGenres.map((g) => g.toLowerCase());
@@ -348,14 +407,51 @@ function passesArtistAllowlistFallback(track: SpotifyTrack, genre: string): bool
       'wizkid', 'burna boy', 'davido', 'rema', 'tems', 'asake', 'fireboy dml',
       'omah lay', 'ayra starr', 'tiwa savage', 'ckay', 'kizz daniel', 'joeboy',
       'victony', 'oxlade', 'ladipoe', 'pheelz', 'tekno', 'mr eazi', 'yemi alade',
+      'patoranking', '2baba', '2face', 'olamide', 'wande coal', 'dbanj',
+      'simi', 'ruger', 'bnxn', 'buju', 'crayon', 'magixx', 'reekado banks',
+      'phyno', 'flavour', 'p-square', 'psquare',
     ],
     afropop: [
       'wizkid', 'davido', 'rema', 'tiwa savage', 'joeboy', 'yemi alade', 'tekno',
-      'kizz daniel', 'fireboy dml',
+      'kizz daniel', 'fireboy dml', 'simi', 'mr eazi', 'patoranking', '2baba',
     ],
     amapiano: [
       'tyla', 'kabza de small', 'dj maphorisa', 'young stunna', 'focalistic',
-      'uncle waffles', 'dbn gogo', 'vigro deep',
+      'uncle waffles', 'dbn gogo', 'vigro deep', 'major league djz',
+      'mellow & sleazy', 'tyler icu',
+    ],
+    fuji: [
+      'sikiru ayinde barrister', 'kwam 1', 'pasuma', 'wasiu alabi pasuma',
+      'obesere', 'saheed osupa', 'adewale ayuba', 'sule alao malaika',
+    ],
+    highlife: [
+      'flavour', 'phyno', 'sir victor uwaifo', 'osibisa', 'prince nico mbarga',
+      'daddy lumba', 'sarkodie', 'ebo taylor', 'rex lawson',
+    ],
+    juju: [
+      'king sunny ade', 'ebenezer obey', 'sir shina peters',
+      'sunny ade', 'i. k. dairo',
+    ],
+    gospel: [
+      'sinach', 'mercy chinwo', 'frank edwards', 'nathaniel bassey',
+      'tope alabi', 'cece winans', 'elevation worship', 'hillsong',
+      'don moen', 'dunsin oyekan', 'tasha cobbs',
+    ],
+    reggae: [
+      'bob marley', 'damian marley', 'ziggy marley', 'jr gong', 'chronixx',
+      'buju banton', 'burning spear', 'jimmy cliff', 'peter tosh',
+      'protoje', 'koffee', 'shenseea',
+    ],
+    'hausa-hiphop': [
+      'classiq', 'ziriums', 'deezell', 'lil prince', 'morell',
+    ],
+    'bongo-flava': [
+      'diamond platnumz', 'harmonize', 'rayvanny', 'ali kiba', 'zuchu',
+      'mbosso', 'jay melody',
+    ],
+    'coupe-decale': [
+      'magic system', 'dj arafat', 'serge beynaud', 'debordo leekunfa',
+      'safarel obiang', 'shado chris', 'dj mix', 'dj eloh',
     ],
   };
 

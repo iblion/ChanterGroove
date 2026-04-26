@@ -6,8 +6,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
-import { ColorTokens, SPACING, RADIUS } from '../constants/theme';
-import { useTheme } from '../contexts/ThemeContext';
+import { COLORS, GRADIENTS, SPACING, RADIUS } from '../constants/theme';
 import { getMockTracks, getTracksByArtist } from '../services/mockData';
 import {
   fetchTracksForGameDetailed,
@@ -36,20 +35,6 @@ interface AttemptLog {
 }
 
 export default function GameScreen({ navigation, route }: any) {
-  const { colors, gradients } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-
-  const EqBar = ({ anim }: { anim: Animated.Value }) => {
-    const height = anim.interpolate({ inputRange: [0, 1], outputRange: [4, 38] });
-    return <Animated.View style={[styles.eqBar, { height }]} />;
-  };
-
-  const DebugRow = ({ k, v }: { k: string; v: string }) => (
-    <View style={styles.debugRow}>
-      <Text style={styles.debugKey}>{k}</Text>
-      <Text style={styles.debugVal} numberOfLines={1}>{v}</Text>
-    </View>
-  );
   const { genre, decade, difficulty, mode, artistFilter, roomId, userId } = route.params;
   const [tracks, setTracks]           = useState<SpotifyTrack[]>([]);
   const [spotifyTrackCount, setSpotifyTrackCount] = useState(0);
@@ -108,7 +93,7 @@ export default function GameScreen({ navigation, route }: any) {
         setSpotifyStatusNote(
           spotifyTracks.length > 0
             ? ''
-            : (getSpotifyLastError() || 'spotify returned no preview tracks')
+            : friendlyFallbackNote(getSpotifyLastError())
         );
         if (spotifyTracks.length >= MIN_ROUNDS) {
           setUsingFallbackPool(false);
@@ -372,8 +357,8 @@ export default function GameScreen({ navigation, route }: any) {
   }
 
   if (!currentTrack) return (
-    <LinearGradient colors={gradients.bgMain} style={styles.center}>
-      <ActivityIndicator size="large" color={colors.primary} />
+    <LinearGradient colors={GRADIENTS.bgMain} style={styles.center}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
       <Text style={styles.loadingText}>LOADING TRACKS</Text>
     </LinearGradient>
   );
@@ -386,7 +371,7 @@ export default function GameScreen({ navigation, route }: any) {
     : spotifyStatusNote;
 
   return (
-    <LinearGradient colors={gradients.bgMain} style={styles.container}>
+    <LinearGradient colors={GRADIENTS.bgMain} style={styles.container}>
       {/* Top bar */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={togglePause} style={styles.iconBtn}>
@@ -405,7 +390,7 @@ export default function GameScreen({ navigation, route }: any) {
       {/* Source pill */}
       <View style={styles.sourceRow}>
         <View style={[styles.sourcePill, isSpotifyLive ? styles.sourcePillLive : styles.sourcePillFallback]}>
-          <View style={[styles.sourceDot, { backgroundColor: isSpotifyLive ? colors.success : colors.warning }]} />
+          <View style={[styles.sourceDot, { backgroundColor: isSpotifyLive ? COLORS.success : COLORS.warning }]} />
           <Text style={styles.sourcePillText}>{sourceLabel}</Text>
         </View>
         <Text style={styles.sourceDetailText} numberOfLines={1}>{sourceDetail}</Text>
@@ -419,7 +404,7 @@ export default function GameScreen({ navigation, route }: any) {
         {/* Now Playing panel */}
         <View style={styles.nowPlayingCard}>
           <View style={styles.nowAlbum}>
-            <GanGanDrumIcon size={36} color={colors.primary} accent={colors.primaryLight} stroke={1.5} />
+            <GanGanDrumIcon size={36} color={COLORS.primary} accent={COLORS.primaryLight} stroke={1.5} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.nowKicker}>NOW PLAYING</Text>
@@ -480,7 +465,7 @@ export default function GameScreen({ navigation, route }: any) {
                   <TextInput
                     style={styles.attemptInput}
                     placeholder="Type your guess…"
-                    placeholderTextColor={colors.textMuted}
+                    placeholderTextColor={COLORS.textMuted}
                     value={userInput}
                     onChangeText={handleInputChange}
                     autoFocus
@@ -563,7 +548,7 @@ export default function GameScreen({ navigation, route }: any) {
             <Text style={styles.actionBtnText}>»  SKIP</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn} onPress={handleGiveUp}>
-            <Text style={[styles.actionBtnText, { color: colors.error }]}>◉  REVEAL</Text>
+            <Text style={[styles.actionBtnText, { color: COLORS.error }]}>◉  REVEAL</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -573,8 +558,8 @@ export default function GameScreen({ navigation, route }: any) {
         <View style={styles.resultOverlay}>
           <View style={styles.resultCard}>
             <View style={styles.resultHeader}>
-              <View style={[styles.resultBadge, { backgroundColor: isCorrect ? colors.success + '22' : colors.error + '22', borderColor: isCorrect ? colors.success : colors.error }]}>
-                <Text style={[styles.resultBadgeText, { color: isCorrect ? colors.success : colors.error }]}>
+              <View style={[styles.resultBadge, { backgroundColor: isCorrect ? COLORS.success + '22' : COLORS.error + '22', borderColor: isCorrect ? COLORS.success : COLORS.error }]}>
+                <Text style={[styles.resultBadgeText, { color: isCorrect ? COLORS.success : COLORS.error }]}>
                   {isCorrect ? 'CORRECT' : 'NOT THIS TIME'}
                 </Text>
               </View>
@@ -594,9 +579,9 @@ export default function GameScreen({ navigation, route }: any) {
                   key={i}
                   style={[
                     styles.resultGridCell,
-                    r === 'correct' && { backgroundColor: colors.success + '33', borderColor: colors.success },
-                    r === 'wrong'   && { backgroundColor: colors.error + '22', borderColor: colors.error },
-                    r === 'skipped' && { backgroundColor: colors.warning + '22', borderColor: colors.warning },
+                    r === 'correct' && { backgroundColor: COLORS.success + '33', borderColor: COLORS.success },
+                    r === 'wrong'   && { backgroundColor: COLORS.error + '22', borderColor: COLORS.error },
+                    r === 'skipped' && { backgroundColor: COLORS.warning + '22', borderColor: COLORS.warning },
                   ]}
                 >
                   <Text style={styles.resultGridText}>
@@ -615,7 +600,7 @@ export default function GameScreen({ navigation, route }: any) {
             </TouchableOpacity>
 
             <TouchableOpacity onPress={nextRound} style={styles.nextBtn} activeOpacity={0.85}>
-              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.nextGrad}>
+              <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.nextGrad}>
                 <Text style={styles.nextText}>
                   {round + 1 >= totalRounds ? 'FINAL SCORE  ▸' : 'NEXT ROUND  ▸'}
                 </Text>
@@ -633,7 +618,7 @@ export default function GameScreen({ navigation, route }: any) {
             <Text style={styles.pauseSub}>Round {round + 1} · Score {score.toLocaleString()}</Text>
 
             <TouchableOpacity onPress={() => { setShowPause(false); setPhase('listening'); }} style={styles.nextBtn}>
-              <LinearGradient colors={gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.nextGrad}>
+              <LinearGradient colors={GRADIENTS.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.nextGrad}>
                 <Text style={styles.nextText}>RESUME  ▸</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -660,7 +645,21 @@ export default function GameScreen({ navigation, route }: any) {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+function EqBar({ anim }: { anim: Animated.Value }) {
+  const height = anim.interpolate({ inputRange: [0, 1], outputRange: [4, 38] });
+  return (
+    <Animated.View style={[styles.eqBar, { height }]} />
+  );
+}
 
+function DebugRow({ k, v }: { k: string; v: string }) {
+  return (
+    <View style={styles.debugRow}>
+      <Text style={styles.debugKey}>{k}</Text>
+      <Text style={styles.debugVal} numberOfLines={1}>{v}</Text>
+    </View>
+  );
+}
 
 function formatClock(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -699,12 +698,31 @@ function filterTracksByDecade<T extends { year?: number }>(
   });
 }
 
+// Translate the raw `lastSpotifyError` machine string into something a player
+// can read. Empty input → empty output (means "live source is fine").
+function friendlyFallbackNote(raw: string): string {
+  if (!raw) return '';
+  if (raw.startsWith('no_spotify_tracks_found')) {
+    return 'Live source thin for this filter — using offline pool.';
+  }
+  if (raw.startsWith('no_preview_tracks_found')) {
+    return 'No preview clips available — using offline pool.';
+  }
+  if (raw.startsWith('token_error')) {
+    return 'Spotify auth failed — using offline pool.';
+  }
+  if (raw.startsWith('search_error')) {
+    return 'Spotify search hiccup — using offline pool.';
+  }
+  return 'Using offline pool.';
+}
+
 // ─── Styles ─────────────────────────────────────────────────────────────────
 
-const makeStyles = (colors: ColorTokens) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md },
-  loadingText: { color: colors.textSecondary, fontSize: 12, fontWeight: '800', letterSpacing: 1.4 },
+  loadingText: { color: COLORS.textSecondary, fontSize: 12, fontWeight: '800', letterSpacing: 1.4 },
 
   // Top bar
   topBar: {
@@ -714,20 +732,20 @@ const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   },
   iconBtn: {
     width: 36, height: 36, borderRadius: RADIUS.sm,
-    backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border,
     alignItems: 'center', justifyContent: 'center',
   },
-  iconBtnText: { color: colors.textSecondary, fontSize: 20, fontWeight: '900', lineHeight: 22 },
+  iconBtnText: { color: COLORS.textSecondary, fontSize: 20, fontWeight: '900', lineHeight: 22 },
   topCenter: { flex: 1, alignItems: 'center' },
-  modeLabel: { fontSize: 11, color: colors.textMuted, fontWeight: '900', letterSpacing: 1.6 },
-  roundCounter: { fontSize: 13, color: colors.textPrimary, fontWeight: '800', letterSpacing: 0.6, fontVariant: ['tabular-nums'] },
+  modeLabel: { fontSize: 11, color: COLORS.textMuted, fontWeight: '900', letterSpacing: 1.6 },
+  roundCounter: { fontSize: 13, color: COLORS.textPrimary, fontWeight: '800', letterSpacing: 0.6, fontVariant: ['tabular-nums'] },
   scorePill: {
-    backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: COLORS.bgCard, borderWidth: 1, borderColor: COLORS.border,
     borderRadius: RADIUS.sm, paddingHorizontal: SPACING.sm + 2, paddingVertical: 6,
     alignItems: 'flex-end',
   },
-  scoreLabel: { color: colors.textMuted, fontSize: 9, fontWeight: '800', letterSpacing: 1.4 },
-  scoreValue: { color: colors.primary, fontSize: 14, fontWeight: '900', fontVariant: ['tabular-nums'] },
+  scoreLabel: { color: COLORS.textMuted, fontSize: 9, fontWeight: '800', letterSpacing: 1.4 },
+  scoreValue: { color: COLORS.primary, fontSize: 14, fontWeight: '900', fontVariant: ['tabular-nums'] },
 
   // Source row
   sourceRow: {
@@ -739,107 +757,107 @@ const makeStyles = (colors: ColorTokens) => StyleSheet.create({
     paddingHorizontal: SPACING.sm + 2, paddingVertical: 5,
     borderRadius: RADIUS.full, borderWidth: 1,
   },
-  sourcePillLive: { backgroundColor: colors.success + '14', borderColor: colors.success + '66' },
-  sourcePillFallback: { backgroundColor: colors.warning + '14', borderColor: colors.warning + '66' },
+  sourcePillLive: { backgroundColor: COLORS.success + '14', borderColor: COLORS.success + '66' },
+  sourcePillFallback: { backgroundColor: COLORS.warning + '14', borderColor: COLORS.warning + '66' },
   sourceDot: { width: 6, height: 6, borderRadius: 3 },
-  sourcePillText: { color: colors.textPrimary, fontSize: 11, fontWeight: '800', letterSpacing: 0.6 },
-  sourceDetailText: { flex: 1, color: colors.textMuted, fontSize: 11 },
+  sourcePillText: { color: COLORS.textPrimary, fontSize: 11, fontWeight: '800', letterSpacing: 0.6 },
+  sourceDetailText: { flex: 1, color: COLORS.textMuted, fontSize: 11 },
 
   scroll: { paddingHorizontal: SPACING.md, paddingBottom: 120, gap: SPACING.sm },
 
   // Now playing
   nowPlayingCard: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    backgroundColor: colors.bgCard, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: colors.border, padding: SPACING.md,
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.border, padding: SPACING.md,
   },
   nowAlbum: {
     width: 56, height: 56, borderRadius: RADIUS.sm,
-    backgroundColor: colors.bgPanelDeep, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: COLORS.bgPanelDeep, borderWidth: 1, borderColor: COLORS.border,
     alignItems: 'center', justifyContent: 'center',
   },
-  nowKicker: { fontSize: 10, color: colors.textMuted, fontWeight: '800', letterSpacing: 1.4 },
-  nowTitle: { fontSize: 16, color: colors.textPrimary, fontWeight: '800', marginTop: 1 },
-  nowArtist: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
+  nowKicker: { fontSize: 10, color: COLORS.textMuted, fontWeight: '800', letterSpacing: 1.4 },
+  nowTitle: { fontSize: 16, color: COLORS.textPrimary, fontWeight: '800', marginTop: 1 },
+  nowArtist: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600' },
   nowTimer: { alignItems: 'flex-end' },
-  nowTimerText: { color: colors.primary, fontSize: 16, fontWeight: '900', fontVariant: ['tabular-nums'] },
-  nowTimerTotal: { color: colors.textMuted, fontSize: 11, fontVariant: ['tabular-nums'] },
+  nowTimerText: { color: COLORS.primary, fontSize: 16, fontWeight: '900', fontVariant: ['tabular-nums'] },
+  nowTimerTotal: { color: COLORS.textMuted, fontSize: 11, fontVariant: ['tabular-nums'] },
 
   // Equalizer panel
   eqPanel: {
-    backgroundColor: colors.bgCard, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: colors.border,
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.border,
     padding: SPACING.md, gap: SPACING.sm,
   },
   eqRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 44, gap: 4 },
-  eqBar: { flex: 1, backgroundColor: colors.primary, borderRadius: 2, opacity: 0.9 },
-  progressBg: { height: 3, backgroundColor: colors.bgPanelDeep, borderRadius: 2, overflow: 'hidden' },
-  progressBar: { height: 3, backgroundColor: colors.primary, borderRadius: 2 },
+  eqBar: { flex: 1, backgroundColor: COLORS.primary, borderRadius: 2, opacity: 0.9 },
+  progressBg: { height: 3, backgroundColor: COLORS.bgPanelDeep, borderRadius: 2, overflow: 'hidden' },
+  progressBar: { height: 3, backgroundColor: COLORS.primary, borderRadius: 2 },
 
   // Attempts panel
   attemptsPanel: {
-    backgroundColor: colors.bgCard, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: colors.border,
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.border,
     padding: SPACING.md, gap: 4,
   },
   attemptsHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 6,
   },
-  panelTitle: { fontSize: 11, color: colors.textMuted, fontWeight: '800', letterSpacing: 1.4 },
-  panelDim: { fontSize: 11, color: colors.textMuted, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  panelTitle: { fontSize: 11, color: COLORS.textMuted, fontWeight: '800', letterSpacing: 1.4 },
+  panelDim: { fontSize: 11, color: COLORS.textMuted, fontWeight: '700', fontVariant: ['tabular-nums'] },
 
   attemptRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    backgroundColor: colors.bgPanel, borderRadius: RADIUS.sm,
-    borderWidth: 1, borderColor: colors.borderSoft,
+    backgroundColor: COLORS.bgPanel, borderRadius: RADIUS.sm,
+    borderWidth: 1, borderColor: COLORS.borderSoft,
     paddingVertical: 8, paddingHorizontal: 10,
   },
-  attemptRowActive: { borderColor: colors.primary, backgroundColor: colors.primary + '0E' },
-  attemptRowCorrect: { borderColor: colors.success, backgroundColor: colors.success + '0E' },
-  attemptRowWrong:   { borderColor: colors.error,   backgroundColor: colors.error + '0A' },
-  attemptRowSkipped: { borderColor: colors.warning + '88', backgroundColor: colors.warning + '08' },
+  attemptRowActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '0E' },
+  attemptRowCorrect: { borderColor: COLORS.success, backgroundColor: COLORS.success + '0E' },
+  attemptRowWrong:   { borderColor: COLORS.error,   backgroundColor: COLORS.error + '0A' },
+  attemptRowSkipped: { borderColor: COLORS.warning + '88', backgroundColor: COLORS.warning + '08' },
   attemptIndex: {
-    width: 16, color: colors.textMuted, fontSize: 12, fontWeight: '900',
+    width: 16, color: COLORS.textMuted, fontSize: 12, fontWeight: '900',
     fontVariant: ['tabular-nums'], textAlign: 'center',
   },
   attemptInput: {
-    flex: 1, color: colors.textPrimary, fontSize: 14, fontWeight: '700',
+    flex: 1, color: COLORS.textPrimary, fontSize: 14, fontWeight: '700',
     paddingVertical: 0,
   },
-  attemptGuess: { flex: 1, color: colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  attemptGuessEmpty: { color: colors.textMuted, fontWeight: '600' },
+  attemptGuess: { flex: 1, color: COLORS.textPrimary, fontSize: 13, fontWeight: '700' },
+  attemptGuessEmpty: { color: COLORS.textMuted, fontWeight: '600' },
   attemptStatusBox: {
     width: 22, height: 22, borderRadius: 4,
     alignItems: 'center', justifyContent: 'center',
   },
-  attemptStatusIcon: { color: colors.textPrimary, fontSize: 14, fontWeight: '900' },
+  attemptStatusIcon: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '900' },
   attemptDuration: {
-    color: colors.textMuted, fontSize: 11, fontWeight: '700',
+    color: COLORS.textMuted, fontSize: 11, fontWeight: '700',
     fontVariant: ['tabular-nums'], minWidth: 36, textAlign: 'right',
   },
 
   // Suggestions
   suggestionsPanel: {
-    backgroundColor: colors.bgCard, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden',
   },
   suggestionRow: {
     paddingVertical: SPACING.sm + 2, paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
+    borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
   },
-  suggestionTitle: { color: colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  suggestionArtist: { color: colors.textSecondary, fontSize: 12 },
+  suggestionTitle: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '700' },
+  suggestionArtist: { color: COLORS.textSecondary, fontSize: 12 },
 
   // Debug
   debugPanel: {
-    backgroundColor: colors.bgCard, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: colors.border, padding: SPACING.md, gap: 6,
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.border, padding: SPACING.md, gap: 6,
   },
   debugRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  debugKey: { color: colors.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 },
+  debugKey: { color: COLORS.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 },
   debugVal: {
-    color: colors.textPrimary, fontSize: 12, fontWeight: '700',
+    color: COLORS.textPrimary, fontSize: 12, fontWeight: '700',
     fontVariant: ['tabular-nums'], maxWidth: width * 0.6, textAlign: 'right',
   },
 
@@ -848,26 +866,26 @@ const makeStyles = (colors: ColorTokens) => StyleSheet.create({
     position: 'absolute', left: 0, right: 0, bottom: 0,
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: SPACING.md, paddingTop: SPACING.sm, paddingBottom: 28,
-    backgroundColor: colors.bgPanelDeep,
-    borderTopWidth: 1, borderTopColor: colors.border,
+    backgroundColor: COLORS.bgPanelDeep,
+    borderTopWidth: 1, borderTopColor: COLORS.border,
   },
   actionBtn: {
     paddingHorizontal: SPACING.sm + 2, paddingVertical: 12,
-    borderRadius: RADIUS.sm, backgroundColor: colors.bgCard,
-    borderWidth: 1, borderColor: colors.border,
+    borderRadius: RADIUS.sm, backgroundColor: COLORS.bgCard,
+    borderWidth: 1, borderColor: COLORS.border,
     flexShrink: 1, alignItems: 'center', justifyContent: 'center',
   },
   actionBtnPrimary: {
-    flex: 1.4, backgroundColor: colors.primary, borderColor: colors.primary,
+    flex: 1.4, backgroundColor: COLORS.primary, borderColor: COLORS.primary,
   },
-  actionBtnText: { color: colors.textPrimary, fontSize: 11, fontWeight: '900', letterSpacing: 1 },
-  actionBtnPrimaryText: { color: colors.onPrimary, fontSize: 12, fontWeight: '900', letterSpacing: 1.2 },
+  actionBtnText: { color: COLORS.textPrimary, fontSize: 11, fontWeight: '900', letterSpacing: 1 },
+  actionBtnPrimaryText: { color: '#0F1115', fontSize: 12, fontWeight: '900', letterSpacing: 1.2 },
 
   // Result modal
   resultOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', alignItems: 'center', justifyContent: 'center', padding: SPACING.lg },
   resultCard: {
-    width: '100%', backgroundColor: colors.bgCard, borderRadius: RADIUS.lg,
-    padding: SPACING.lg, borderWidth: 1, borderColor: colors.border, gap: SPACING.sm,
+    width: '100%', backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg,
+    padding: SPACING.lg, borderWidth: 1, borderColor: COLORS.border, gap: SPACING.sm,
   },
   resultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   resultBadge: {
@@ -875,32 +893,32 @@ const makeStyles = (colors: ColorTokens) => StyleSheet.create({
     borderRadius: RADIUS.full, borderWidth: 1,
   },
   resultBadgeText: { fontSize: 11, fontWeight: '900', letterSpacing: 1.2 },
-  resultMeta: { color: colors.textMuted, fontSize: 11, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  resultTrackName: { fontSize: 22, color: colors.textPrimary, fontWeight: '900', marginTop: 6 },
-  resultTrackArtist: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+  resultMeta: { color: COLORS.textMuted, fontSize: 11, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  resultTrackName: { fontSize: 22, color: COLORS.textPrimary, fontWeight: '900', marginTop: 6 },
+  resultTrackArtist: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '600' },
   resultGrid: { flexDirection: 'row', gap: 4, marginTop: SPACING.xs },
   resultGridCell: {
     flex: 1, height: 28, borderRadius: 6,
-    backgroundColor: colors.bgPanelDeep, borderWidth: 1, borderColor: colors.borderSoft,
+    backgroundColor: COLORS.bgPanelDeep, borderWidth: 1, borderColor: COLORS.borderSoft,
     alignItems: 'center', justifyContent: 'center',
   },
-  resultGridText: { color: colors.textPrimary, fontSize: 14, fontWeight: '900' },
-  resultPoints: { color: colors.primary, fontSize: 14, fontWeight: '900', fontVariant: ['tabular-nums'] },
+  resultGridText: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '900' },
+  resultPoints: { color: COLORS.primary, fontSize: 14, fontWeight: '900', fontVariant: ['tabular-nums'] },
   reportBtn: {
     alignSelf: 'flex-start',
     paddingHorizontal: SPACING.sm + 2, paddingVertical: 6,
-    borderRadius: RADIUS.full, borderWidth: 1, borderColor: colors.border,
+    borderRadius: RADIUS.full, borderWidth: 1, borderColor: COLORS.border,
   },
-  reportText: { color: colors.warning, fontSize: 11, fontWeight: '800', letterSpacing: 0.6 },
+  reportText: { color: COLORS.warning, fontSize: 11, fontWeight: '800', letterSpacing: 0.6 },
   nextBtn: { borderRadius: RADIUS.md, overflow: 'hidden', marginTop: SPACING.sm },
   nextGrad: { paddingVertical: 14, alignItems: 'center' },
-  nextText: { color: colors.onPrimary, fontSize: 13, fontWeight: '900', letterSpacing: 1.2 },
+  nextText: { color: '#0F1115', fontSize: 13, fontWeight: '900', letterSpacing: 1.2 },
 
-  pauseTitle: { color: colors.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: 1.4 },
-  pauseSub: { color: colors.textSecondary, fontSize: 12 },
+  pauseTitle: { color: COLORS.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: 1.4 },
+  pauseSub: { color: COLORS.textSecondary, fontSize: 12 },
   pauseAlt: {
     paddingVertical: 12, alignItems: 'center',
-    borderRadius: RADIUS.sm, borderWidth: 1, borderColor: colors.border,
+    borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.border,
   },
-  pauseAltText: { color: colors.textSecondary, fontWeight: '800', fontSize: 12, letterSpacing: 1 },
+  pauseAltText: { color: COLORS.textSecondary, fontWeight: '800', fontSize: 12, letterSpacing: 1 },
 });
