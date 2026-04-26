@@ -229,17 +229,24 @@ export const MOTION = {
 
 // ─── Genres / Decades / Difficulty ──────────────────────────────────────────
 export const GENRES = [
-  { id: 'afrobeats', label: 'Afrobeats', emoji: '🥁', color: '#E36A2C', spotifyGenre: 'afrobeats', featured: true },
-  { id: 'afropop',   label: 'Afropop',   emoji: '🌍', color: '#F7935A', spotifyGenre: 'afro-pop',  featured: true },
-  { id: 'amapiano',  label: 'Amapiano',  emoji: '🎹', color: '#1F8A55', spotifyGenre: 'amapiano',  featured: true },
-  { id: 'fuji',      label: 'Fuji',      emoji: '🪘', color: '#0F7A4E', spotifyGenre: 'fuji',      featured: true },
-  { id: 'hiphop',    label: 'Hip-Hop',   emoji: '🎤', color: '#7A4DDB', spotifyGenre: 'hip-hop',   featured: false },
-  { id: 'rap',       label: 'Rap',       emoji: '🔥', color: '#9C5BFF', spotifyGenre: 'rap',       featured: false },
-  { id: 'pop',       label: 'Pop',       emoji: '⭐', color: '#D4476B', spotifyGenre: 'pop',       featured: false },
-  { id: 'rnb',       label: 'R&B',       emoji: '💫', color: '#3F8C73', spotifyGenre: 'r-n-b',    featured: false },
-  { id: 'dancehall', label: 'Dancehall', emoji: '🕺', color: '#3FA797', spotifyGenre: 'dancehall', featured: false },
-  { id: 'rock',      label: 'Rock',      emoji: '🎸', color: '#C8423B', spotifyGenre: 'rock',      featured: false },
-  { id: 'jazz',      label: 'Jazz',      emoji: '🎷', color: '#C77F1A', spotifyGenre: 'jazz',      featured: false },
+  { id: 'afrobeats',    label: 'Afrobeats',    emoji: '🥁', color: '#E36A2C', spotifyGenre: 'afrobeats',    featured: true },
+  { id: 'afropop',      label: 'Afropop',      emoji: '🌍', color: '#F7935A', spotifyGenre: 'afro-pop',     featured: true },
+  { id: 'amapiano',     label: 'Amapiano',     emoji: '🎹', color: '#1F8A55', spotifyGenre: 'amapiano',     featured: true },
+  { id: 'fuji',         label: 'Fuji',         emoji: '🪘', color: '#0F7A4E', spotifyGenre: 'fuji',         featured: true },
+  { id: 'highlife',     label: 'Highlife',     emoji: '🎺', color: '#C99026', spotifyGenre: 'highlife',     featured: true },
+  { id: 'juju',         label: 'Juju',         emoji: '🪕', color: '#8E5BFF', spotifyGenre: 'juju',         featured: false },
+  { id: 'gospel',       label: 'Gospel',       emoji: '🙌', color: '#D7A93B', spotifyGenre: 'gospel',       featured: false },
+  { id: 'reggae',       label: 'Reggae',       emoji: '🦁', color: '#249C5C', spotifyGenre: 'reggae',       featured: false },
+  { id: 'hausa-hiphop', label: 'Hausa Hip-Hop',emoji: '🌙', color: '#A2693E', spotifyGenre: 'hausa hip hop',featured: false },
+  { id: 'bongo-flava',  label: 'Bongo Flava',  emoji: '🌴', color: '#1FA39C', spotifyGenre: 'bongo flava',  featured: false },
+  { id: 'coupe-decale', label: 'Coupé-Décalé', emoji: '✂️', color: '#D24F4F', spotifyGenre: 'coupe decale', featured: false },
+  { id: 'hiphop',       label: 'Hip-Hop',      emoji: '🎤', color: '#7A4DDB', spotifyGenre: 'hip-hop',      featured: false },
+  { id: 'rap',          label: 'Rap',          emoji: '🔥', color: '#9C5BFF', spotifyGenre: 'rap',          featured: false },
+  { id: 'pop',          label: 'Pop',          emoji: '⭐', color: '#D4476B', spotifyGenre: 'pop',          featured: false },
+  { id: 'rnb',          label: 'R&B',          emoji: '💫', color: '#3F8C73', spotifyGenre: 'r-n-b',        featured: false },
+  { id: 'dancehall',    label: 'Dancehall',    emoji: '🕺', color: '#3FA797', spotifyGenre: 'dancehall',    featured: false },
+  { id: 'rock',         label: 'Rock',         emoji: '🎸', color: '#C8423B', spotifyGenre: 'rock',         featured: false },
+  { id: 'jazz',         label: 'Jazz',         emoji: '🎷', color: '#C77F1A', spotifyGenre: 'jazz',         featured: false },
 ];
 
 export const DECADES = [

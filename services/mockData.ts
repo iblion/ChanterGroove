@@ -228,6 +228,107 @@ export const MOCK_TRACKS: SpotifyTrack[] = [
 
   // ─── Extra SZA (1 more → 4 total) ───────────────────────────────────────
   { id: 'sz1',  name: 'Good Days',       artists: ['SZA'],                     album: 'SOS',                    albumArt: art(9),  previewUrl: audio(1),  year: 2020, genre: 'rnb', popularity: 92 },
+
+  // ─── Extra Fuji (15 more → 30 total) ────────────────────────────────────
+  { id: 'fj16', name: 'Garbage Reloaded', artists: ['Sikiru Ayinde Barrister'], album: 'Reloaded',              albumArt: art(0),  previewUrl: audio(2),  year: 2002, genre: 'fuji', popularity: 73 },
+  { id: 'fj17', name: 'Current Affairs',  artists: ['Sikiru Ayinde Barrister'], album: 'Current Affairs',       albumArt: art(1),  previewUrl: audio(3),  year: 1995, genre: 'fuji', popularity: 72 },
+  { id: 'fj18', name: 'Fuji Vibration',   artists: ['KWAM 1'],                  album: 'Fuji Vibration',        albumArt: art(2),  previewUrl: audio(4),  year: 2005, genre: 'fuji', popularity: 78 },
+  { id: 'fj19', name: 'Eko Phenomenon',   artists: ['KWAM 1'],                  album: 'Eko Phenomenon',        albumArt: art(3),  previewUrl: audio(5),  year: 2008, genre: 'fuji', popularity: 76 },
+  { id: 'fj20', name: 'Mr Vibration',     artists: ['Pasuma'],                  album: 'Mr Vibration',          albumArt: art(4),  previewUrl: audio(6),  year: 2014, genre: 'fuji', popularity: 79 },
+  { id: 'fj21', name: 'Recognition',      artists: ['Pasuma'],                  album: 'Recognition',           albumArt: art(5),  previewUrl: audio(7),  year: 1998, genre: 'fuji', popularity: 75 },
+  { id: 'fj22', name: 'Asakasa',          artists: ['Obesere'],                 album: 'Asakasa',               albumArt: art(6),  previewUrl: audio(8),  year: 2002, genre: 'fuji', popularity: 80 },
+  { id: 'fj23', name: 'Egba Mi O',        artists: ['Obesere'],                 album: 'Egba Mi O',             albumArt: art(7),  previewUrl: audio(9),  year: 2005, genre: 'fuji', popularity: 76 },
+  { id: 'fj24', name: 'Saviour',          artists: ['Saheed Osupa'],            album: 'Saviour',               albumArt: art(8),  previewUrl: audio(10), year: 2007, genre: 'fuji', popularity: 74 },
+  { id: 'fj25', name: 'Ija Eepa',         artists: ['Saheed Osupa'],            album: 'Ija Eepa',              albumArt: art(9),  previewUrl: audio(11), year: 2003, genre: 'fuji', popularity: 73 },
+  { id: 'fj26', name: 'Bubble',           artists: ['Adewale Ayuba'],           album: 'Bubble',                albumArt: art(0),  previewUrl: audio(12), year: 1997, genre: 'fuji', popularity: 78 },
+  { id: 'fj27', name: 'Fuji Satisfaction', artists: ['Adewale Ayuba'],          album: 'Fuji Satisfaction',     albumArt: art(1),  previewUrl: audio(13), year: 2000, genre: 'fuji', popularity: 76 },
+  { id: 'fj28', name: 'Esa Ma Miss Road', artists: ['Wasiu Alabi Pasuma'],      album: 'Esa Ma Miss Road',      albumArt: art(2),  previewUrl: audio(14), year: 2010, genre: 'fuji', popularity: 75 },
+  { id: 'fj29', name: 'Fuji Garbage Vol 2', artists: ['Sikiru Ayinde Barrister'], album: 'Fuji Garbage Vol 2', albumArt: art(3),  previewUrl: audio(15), year: 1992, genre: 'fuji', popularity: 71 },
+  { id: 'fj30', name: 'Open & Close',     artists: ['KWAM 1'],                  album: 'Open & Close',          albumArt: art(4),  previewUrl: audio(0),  year: 2012, genre: 'fuji', popularity: 73 },
+
+  // ─── Highlife (10) ──────────────────────────────────────────────────────
+  // Ghanaian/Nigerian guitar-band tradition; influenced everything from Afrobeat to Afrobeats.
+  { id: 'hl1',  name: 'Sweet Mother',     artists: ['Prince Nico Mbarga'],      album: 'Sweet Mother',          albumArt: art(5),  previewUrl: audio(1),  year: 1976, genre: 'highlife', popularity: 92 },
+  { id: 'hl2',  name: 'Yamore',           artists: ['Salif Keita', 'Cesaria Evora'], album: 'Moffou',           albumArt: art(6),  previewUrl: audio(2),  year: 2002, genre: 'highlife', popularity: 78 },
+  { id: 'hl3',  name: 'Joromi',           artists: ['Sir Victor Uwaifo'],       album: 'Joromi',                albumArt: art(7),  previewUrl: audio(3),  year: 1969, genre: 'highlife', popularity: 80 },
+  { id: 'hl4',  name: 'Sakoma',           artists: ['Osibisa'],                 album: 'Woyaya',                albumArt: art(8),  previewUrl: audio(4),  year: 1971, genre: 'highlife', popularity: 76 },
+  { id: 'hl5',  name: 'Adure',            artists: ['Flavour'],                 album: 'Uplifted',              albumArt: art(9),  previewUrl: audio(5),  year: 2010, genre: 'highlife', popularity: 84 },
+  { id: 'hl6',  name: 'Ada Ada',          artists: ['Flavour'],                 album: 'Thankful',              albumArt: art(0),  previewUrl: audio(6),  year: 2014, genre: 'highlife', popularity: 86 },
+  { id: 'hl7',  name: 'Time No Dey',      artists: ['Flavour'],                 album: 'Flavour of Africa',     albumArt: art(1),  previewUrl: audio(7),  year: 2021, genre: 'highlife', popularity: 82 },
+  { id: 'hl8',  name: 'Onye',             artists: ['Phyno', 'Flavour'],        album: 'Deal With It',          albumArt: art(2),  previewUrl: audio(8),  year: 2019, genre: 'highlife', popularity: 81 },
+  { id: 'hl9',  name: 'Otoolege',         artists: ['Sarkodie', 'Castro'],      album: 'Sarkology',             albumArt: art(3),  previewUrl: audio(9),  year: 2014, genre: 'highlife', popularity: 80 },
+  { id: 'hl10', name: 'Daddy Lumba Special', artists: ['Daddy Lumba'],          album: 'Aben Wo Ha',            albumArt: art(4),  previewUrl: audio(10), year: 1998, genre: 'highlife', popularity: 79 },
+
+  // ─── Juju (8) ───────────────────────────────────────────────────────────
+  // Yoruba talking-drum + electric guitar tradition; King Sunny Ade & Ebenezer Obey.
+  { id: 'jj1',  name: 'Synchro System',   artists: ['King Sunny Ade'],          album: 'Synchro System',        albumArt: art(5),  previewUrl: audio(11), year: 1983, genre: 'juju', popularity: 82 },
+  { id: 'jj2',  name: '365 Is My Number', artists: ['King Sunny Ade'],          album: '365 Is My Number',      albumArt: art(6),  previewUrl: audio(12), year: 1980, genre: 'juju', popularity: 78 },
+  { id: 'jj3',  name: 'Ja Funmi',         artists: ['King Sunny Ade'],          album: 'Juju Music',            albumArt: art(7),  previewUrl: audio(13), year: 1982, genre: 'juju', popularity: 76 },
+  { id: 'jj4',  name: 'E Sa Ma Miss Road', artists: ['Ebenezer Obey'],          album: 'Miliki Sound',          albumArt: art(8),  previewUrl: audio(14), year: 1979, genre: 'juju', popularity: 77 },
+  { id: 'jj5',  name: 'Board Members',    artists: ['Ebenezer Obey'],           album: 'Board Members',         albumArt: art(9),  previewUrl: audio(15), year: 1976, genre: 'juju', popularity: 74 },
+  { id: 'jj6',  name: 'Aimasiko',         artists: ['Ebenezer Obey'],           album: 'Aimasiko',              albumArt: art(0),  previewUrl: audio(0),  year: 1981, genre: 'juju', popularity: 75 },
+  { id: 'jj7',  name: 'My Dear',          artists: ['King Sunny Ade'],          album: 'Aura',                  albumArt: art(1),  previewUrl: audio(1),  year: 1984, genre: 'juju', popularity: 73 },
+  { id: 'jj8',  name: 'Mo Ti Mo',         artists: ['Sir Shina Peters'],        album: 'Ace',                   albumArt: art(2),  previewUrl: audio(2),  year: 1989, genre: 'juju', popularity: 76 },
+
+  // ─── Gospel (10) ────────────────────────────────────────────────────────
+  // Mix of African and global gospel — Sinach, Frank Edwards, Hillsong, Mercy Chinwo.
+  { id: 'gs1',  name: 'Way Maker',        artists: ['Sinach'],                  album: 'Way Maker',             albumArt: art(3),  previewUrl: audio(3),  year: 2015, genre: 'gospel', popularity: 92 },
+  { id: 'gs2',  name: 'I Know Who I Am',  artists: ['Sinach'],                  album: 'I Know Who I Am',       albumArt: art(4),  previewUrl: audio(4),  year: 2012, genre: 'gospel', popularity: 84 },
+  { id: 'gs3',  name: 'Excess Love',      artists: ['Mercy Chinwo'],            album: 'Excess Love',           albumArt: art(5),  previewUrl: audio(5),  year: 2018, genre: 'gospel', popularity: 88 },
+  { id: 'gs4',  name: 'Akamdinelu',       artists: ['Mercy Chinwo'],            album: 'Satisfied',             albumArt: art(6),  previewUrl: audio(6),  year: 2020, genre: 'gospel', popularity: 85 },
+  { id: 'gs5',  name: 'Praise',           artists: ['Elevation Worship'],       album: 'CAN YOU IMAGINE?',      albumArt: art(7),  previewUrl: audio(7),  year: 2023, genre: 'gospel', popularity: 87 },
+  { id: 'gs6',  name: 'Goodness of God',  artists: ['CeCe Winans'],             album: 'Believe For It',        albumArt: art(8),  previewUrl: audio(8),  year: 2021, genre: 'gospel', popularity: 86 },
+  { id: 'gs7',  name: 'Halleluyah Amen',  artists: ['Frank Edwards'],           album: 'Genesis',               albumArt: art(9),  previewUrl: audio(9),  year: 2019, genre: 'gospel', popularity: 80 },
+  { id: 'gs8',  name: 'Imela',            artists: ['Nathaniel Bassey', 'Enitan Adaba'], album: 'This God Is Too Good', albumArt: art(0), previewUrl: audio(10), year: 2014, genre: 'gospel', popularity: 82 },
+  { id: 'gs9',  name: 'Olowogbogboro',    artists: ['Nathaniel Bassey'],        album: 'You Reign',             albumArt: art(1),  previewUrl: audio(11), year: 2017, genre: 'gospel', popularity: 81 },
+  { id: 'gs10', name: 'I Made A Mistake', artists: ['Tope Alabi'],              album: 'I Made A Mistake',      albumArt: art(2),  previewUrl: audio(12), year: 2021, genre: 'gospel', popularity: 78 },
+
+  // ─── Reggae (10) ────────────────────────────────────────────────────────
+  { id: 'rg1',  name: 'No Woman No Cry',  artists: ['Bob Marley & The Wailers'], album: 'Natty Dread',          albumArt: art(3),  previewUrl: audio(13), year: 1974, genre: 'reggae', popularity: 96 },
+  { id: 'rg2',  name: 'Three Little Birds', artists: ['Bob Marley & The Wailers'], album: 'Exodus',             albumArt: art(4),  previewUrl: audio(14), year: 1977, genre: 'reggae', popularity: 95 },
+  { id: 'rg3',  name: 'Could You Be Loved', artists: ['Bob Marley & The Wailers'], album: 'Uprising',           albumArt: art(5),  previewUrl: audio(15), year: 1980, genre: 'reggae', popularity: 94 },
+  { id: 'rg4',  name: 'Welcome to Jamrock', artists: ['Damian Marley'],         album: 'Welcome to Jamrock',    albumArt: art(6),  previewUrl: audio(0),  year: 2005, genre: 'reggae', popularity: 90 },
+  { id: 'rg5',  name: 'Burnin and Lootin', artists: ['Bob Marley & The Wailers'], album: 'Burnin\u0027',        albumArt: art(7),  previewUrl: audio(1),  year: 1973, genre: 'reggae', popularity: 86 },
+  { id: 'rg6',  name: 'Many More Roads',  artists: ['Chronixx'],                album: 'Chronology',            albumArt: art(8),  previewUrl: audio(2),  year: 2017, genre: 'reggae', popularity: 82 },
+  { id: 'rg7',  name: 'Stir It Up',       artists: ['Bob Marley & The Wailers'], album: 'Catch a Fire',         albumArt: art(9),  previewUrl: audio(3),  year: 1973, genre: 'reggae', popularity: 89 },
+  { id: 'rg8',  name: 'Africa Unite',     artists: ['Bob Marley & The Wailers'], album: 'Survival',             albumArt: art(0),  previewUrl: audio(4),  year: 1979, genre: 'reggae', popularity: 84 },
+  { id: 'rg9',  name: 'Murderer',         artists: ['Buju Banton'],             album: 'Til Shiloh',            albumArt: art(1),  previewUrl: audio(5),  year: 1995, genre: 'reggae', popularity: 81 },
+  { id: 'rg10', name: 'Untold Stories',   artists: ['Buju Banton'],             album: 'Til Shiloh',            albumArt: art(2),  previewUrl: audio(6),  year: 1995, genre: 'reggae', popularity: 83 },
+
+  // ─── Hausa Hip-Hop (8) ──────────────────────────────────────────────────
+  // Northern Nigerian rap; Classiq, Ziriums, Deezell, Lil Prince, Morell.
+  { id: 'hh101', name: 'Tsegumi',         artists: ['Classiq'],                 album: 'Mr Sufuri',             albumArt: art(3),  previewUrl: audio(7),  year: 2017, genre: 'hausa-hiphop', popularity: 72 },
+  { id: 'hh102', name: 'Kogin Kwarara',   artists: ['Classiq', 'Phyno'],        album: 'Single',                albumArt: art(4),  previewUrl: audio(8),  year: 2019, genre: 'hausa-hiphop', popularity: 75 },
+  { id: 'hh103', name: 'Wakar Soyayya',   artists: ['Ziriums'],                 album: 'Hausa Hip Hop',         albumArt: art(5),  previewUrl: audio(9),  year: 2014, genre: 'hausa-hiphop', popularity: 70 },
+  { id: 'hh104', name: 'Anuwa',           artists: ['Deezell'],                 album: 'Northern Anthem',       albumArt: art(6),  previewUrl: audio(10), year: 2020, genre: 'hausa-hiphop', popularity: 73 },
+  { id: 'hh105', name: 'Sarauta',         artists: ['Lil Prince'],              album: 'Sarauta',               albumArt: art(7),  previewUrl: audio(11), year: 2018, genre: 'hausa-hiphop', popularity: 68 },
+  { id: 'hh106', name: 'Tabbatar',        artists: ['Morell'],                  album: 'Tabbatar',              albumArt: art(8),  previewUrl: audio(12), year: 2021, genre: 'hausa-hiphop', popularity: 70 },
+  { id: 'hh107', name: 'Arewa Anthem',    artists: ['Classiq', 'Deezell'],      album: 'Arewa Anthem',          albumArt: art(9),  previewUrl: audio(13), year: 2022, genre: 'hausa-hiphop', popularity: 74 },
+  { id: 'hh108', name: 'Sakarai',         artists: ['Morell'],                  album: 'Sakarai',               albumArt: art(0),  previewUrl: audio(14), year: 2019, genre: 'hausa-hiphop', popularity: 71 },
+
+  // ─── Bongo Flava (10) ───────────────────────────────────────────────────
+  // Tanzanian pop; Diamond Platnumz, Harmonize, Rayvanny, Ali Kiba, Zuchu.
+  { id: 'bf1',  name: 'Jeje',             artists: ['Diamond Platnumz'],        album: 'A Boy from Tandale',    albumArt: art(1),  previewUrl: audio(15), year: 2018, genre: 'bongo-flava', popularity: 85 },
+  { id: 'bf2',  name: 'Tetema',           artists: ['Rayvanny', 'Diamond Platnumz'], album: 'Tetema',           albumArt: art(2),  previewUrl: audio(0),  year: 2019, genre: 'bongo-flava', popularity: 88 },
+  { id: 'bf3',  name: 'Inama',            artists: ['Diamond Platnumz', 'Fally Ipupa'], album: 'A Boy from Tandale', albumArt: art(3), previewUrl: audio(1), year: 2018, genre: 'bongo-flava', popularity: 84 },
+  { id: 'bf4',  name: 'Iyena',            artists: ['Diamond Platnumz'],        album: 'Iyena',                 albumArt: art(4),  previewUrl: audio(2),  year: 2020, genre: 'bongo-flava', popularity: 82 },
+  { id: 'bf5',  name: 'Kainama',          artists: ['Harmonize', 'Diamond Platnumz', 'Burna Boy'], album: 'Afro East', albumArt: art(5), previewUrl: audio(3), year: 2018, genre: 'bongo-flava', popularity: 86 },
+  { id: 'bf6',  name: 'Uno',              artists: ['Harmonize'],               album: 'Afro East',             albumArt: art(6),  previewUrl: audio(4),  year: 2019, genre: 'bongo-flava', popularity: 80 },
+  { id: 'bf7',  name: 'Sisi Kwa Sisi',    artists: ['Ali Kiba'],                album: 'Mvumo wa Radi',         albumArt: art(7),  previewUrl: audio(5),  year: 2017, genre: 'bongo-flava', popularity: 78 },
+  { id: 'bf8',  name: 'Seduce Me',        artists: ['Ali Kiba'],                album: 'Seduce Me',             albumArt: art(8),  previewUrl: audio(6),  year: 2016, genre: 'bongo-flava', popularity: 79 },
+  { id: 'bf9',  name: 'Sukari',           artists: ['Zuchu'],                   album: 'I Am Zuchu',            albumArt: art(9),  previewUrl: audio(7),  year: 2020, genre: 'bongo-flava', popularity: 81 },
+  { id: 'bf10', name: 'Cheche',           artists: ['Zuchu'],                   album: 'Cheche',                albumArt: art(0),  previewUrl: audio(8),  year: 2022, genre: 'bongo-flava', popularity: 80 },
+
+  // ─── Coupé-Décalé (8) ───────────────────────────────────────────────────
+  // Ivorian dance music; DJ Arafat, Serge Beynaud, Debordo Leekunfa, Magic System.
+  { id: 'cd1',  name: 'Premier Gaou',     artists: ['Magic System'],            album: '1er Gaou',              albumArt: art(1),  previewUrl: audio(9),  year: 1999, genre: 'coupe-decale', popularity: 87 },
+  { id: 'cd2',  name: 'Magic in the Air', artists: ['Magic System', 'Chawki'],  album: 'Africainement Votre',   albumArt: art(2),  previewUrl: audio(10), year: 2014, genre: 'coupe-decale', popularity: 85 },
+  { id: 'cd3',  name: 'Moto Moto',        artists: ['DJ Arafat'],               album: 'Moto Moto',             albumArt: art(3),  previewUrl: audio(11), year: 2017, genre: 'coupe-decale', popularity: 80 },
+  { id: 'cd4',  name: 'Dosabado',         artists: ['DJ Arafat'],               album: 'Renaissance',           albumArt: art(4),  previewUrl: audio(12), year: 2018, genre: 'coupe-decale', popularity: 78 },
+  { id: 'cd5',  name: 'Sans Faille',      artists: ['Serge Beynaud'],           album: 'Sans Faille',           albumArt: art(5),  previewUrl: audio(13), year: 2017, genre: 'coupe-decale', popularity: 76 },
+  { id: 'cd6',  name: 'Talancan',         artists: ['Serge Beynaud'],           album: 'Talancan',              albumArt: art(6),  previewUrl: audio(14), year: 2015, genre: 'coupe-decale', popularity: 75 },
+  { id: 'cd7',  name: 'Bobaraba',         artists: ['DJ Mix', 'DJ Eloh'],       album: 'Bobaraba',              albumArt: art(7),  previewUrl: audio(15), year: 2008, genre: 'coupe-decale', popularity: 77 },
+  { id: 'cd8',  name: 'Dechouquetage',    artists: ['Debordo Leekunfa'],        album: 'Dechouquetage',         albumArt: art(8),  previewUrl: audio(0),  year: 2016, genre: 'coupe-decale', popularity: 74 },
 ];
 
 // ─── Get mock tracks with optional genre filter ───────────────────────────
