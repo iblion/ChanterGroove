@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { ColorTokens, RADIUS, SPACING } from '../constants/theme';
 import { useTheme } from '../contexts/ThemeContext';
+import PressableScale from './PressableScale';
 
 interface ModeChipProps {
   label: string;
@@ -26,9 +27,9 @@ export default function ModeChip({
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
+    <PressableScale
       onPress={onPress}
+      pressedScale={0.95}
       style={[
         styles.chip,
         size === 'sm' && styles.chipSm,
@@ -50,7 +51,7 @@ export default function ModeChip({
       >
         {label}
       </Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

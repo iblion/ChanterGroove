@@ -10,6 +10,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
 import { ColorTokens, RADIUS, SPACING } from '../constants/theme';
+import PressableScale from './PressableScale';
 
 // ─── QuickPlayRow ───────────────────────────────────────────────────────────
 // Horizontally scrolling row of pressable game-launch tiles. Inspired by
@@ -76,11 +77,7 @@ function Tile({ item, onPress }: { item: QuickPlayItem; onPress: () => void }) {
   const accent = item.color || colors.primary;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={onPress}
-      style={styles.tile}
-    >
+    <PressableScale onPress={onPress} style={styles.tile} pressedScale={0.94}>
       <LinearGradient
         colors={[accent + '33', accent + '08']}
         start={{ x: 0, y: 0 }}
@@ -98,7 +95,7 @@ function Tile({ item, onPress }: { item: QuickPlayItem; onPress: () => void }) {
         )}
         <View style={[styles.tileDot, { backgroundColor: accent }]} />
       </LinearGradient>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

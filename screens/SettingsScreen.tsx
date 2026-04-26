@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import SegmentedToggle from '../components/SegmentedToggle';
 import { getSettings, saveSettings, AppSettings, resetAllData } from '../services/storage';
 import { clearSettingsCache } from '../services/sounds';
+import { invalidateHapticCache } from '../services/haptics';
 
 export default function SettingsScreen({ navigation }: any) {
   const { colors, gradients, mode, setMode, patternVariant, setPatternVariant } = useTheme();
@@ -27,6 +28,7 @@ export default function SettingsScreen({ navigation }: any) {
     setSettings(updated);
     await saveSettings(updated);
     clearSettingsCache(); // Force reload on next SFX call
+    invalidateHapticCache(); // Force reload on next haptic call
   }
 
   function handleReset() {

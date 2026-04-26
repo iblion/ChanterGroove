@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +10,7 @@ import { ColorTokens, SPACING, RADIUS } from '../constants/theme';
 import { useTheme } from '../contexts/ThemeContext';
 import CircularHeroBadge from './CircularHeroBadge';
 import AdinkraPattern from './AdinkraPattern';
+import PressableScale from './PressableScale';
 
 // ─── HeroCard (Design 5) ────────────────────────────────────────────────────
 // One editorial hero per screen. Adinkra pattern at low opacity sits behind
@@ -100,11 +100,12 @@ export default function HeroCard({
         {children}
 
         {!!ctaLabel && (
-          <TouchableOpacity
+          <PressableScale
             style={[styles.cta, ctaDisabled && { opacity: 0.5 }]}
-            activeOpacity={0.85}
             onPress={onPressCta}
             disabled={ctaDisabled || !onPressCta}
+            haptic="press"
+            pressedScale={0.97}
           >
             <LinearGradient
               colors={variant === 'primary' ? gradients.primary : gradients.bgCard}
@@ -139,7 +140,7 @@ export default function HeroCard({
                 </Text>
               )}
             </LinearGradient>
-          </TouchableOpacity>
+          </PressableScale>
         )}
       </View>
     </View>
