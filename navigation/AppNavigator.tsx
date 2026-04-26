@@ -17,6 +17,7 @@ import ArtistModeSetupScreen   from '../screens/ArtistModeSetupScreen';
 import SpeedRoundScreen        from '../screens/SpeedRoundScreen';
 import LyricsModeScreen        from '../screens/LyricsModeScreen';
 import DailyLyricsScreen       from '../screens/DailyLyricsScreen';
+import PastDailyScreen         from '../screens/PastDailyScreen';
 import { COLORS } from '../constants/theme';
 
 const Stack = createStackNavigator();
@@ -48,6 +49,7 @@ export default function AppNavigator() {
         <Stack.Screen name="SpeedRound"      component={SpeedRoundScreen}      options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="LyricsMode"      component={LyricsModeScreen}      options={{ title: 'Lyrics Mode' }} />
         <Stack.Screen name="DailyLyrics"     component={DailyLyricsScreen}     options={{ title: 'Daily Lyrics' }} />
+        <Stack.Screen name="PastDaily"       component={PastDailyScreen}       options={{ title: 'Past Daily' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,6 +16,10 @@ import HeroCard from '../components/HeroCard';
 import ModeChip from '../components/ModeChip';
 import QuickPlayRow from '../components/QuickPlayRow';
 import DailyRecapCard from '../components/DailyRecapCard';
+import HowToPlayModal, {
+  isHowToPlaySeen,
+  markHowToPlaySeen,
+} from '../components/HowToPlayModal';
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -34,6 +38,17 @@ export default function HomeScreen({ navigation }: any) {
       loadData();
     }, [])
   );
+
+  useEffect(() => {
+    isHowToPlaySeen().then((seen) => {
+      if (!seen) setShowHowToPlay(true);
+    });
+  }, []);
+
+  function closeHowToPlay() {
+    setShowHowToPlay(false);
+    markHowToPlaySeen();
+  }
 
   async function loadData() {
     ensureUser().catch(() => {});
@@ -268,27 +283,18 @@ export default function HomeScreen({ navigation }: any) {
         {/* ── Footer links ───────────────────────────────────────────── */}
         <View style={styles.toolbar}>
           <ToolbarBtn label="STATS"    onPress={() => navigation.navigate('Stats')} />
+          <ToolbarBtn label="ARCHIVE"  onPress={() => navigation.navigate('PastDaily')} />
           <ToolbarBtn label="BADGES"   onPress={() => navigation.navigate('Achievements')} />
           <ToolbarBtn label="SETTINGS" onPress={() => navigation.navigate('Settings')} />
         </View>
       </ScrollView>
 
-      {/* How to Play modal */}
-      <Modal visible={showHowToPlay} transparent animationType="fade" onRequestClose={() => setShowHowToPlay(false)}>
-        <View style={styles.helpOverlay}>
-          <View style={styles.helpCard}>
-            <Text style={styles.helpTitle}>HOW TO PLAY</Text>
-            <Text style={styles.helpLine}>1. Listen to the short clip.</Text>
-            <Text style={styles.helpLine}>2. Type a song and hit Submit.</Text>
-            <Text style={styles.helpLine}>3. Skip or wrong guess unlocks a longer clip.</Text>
-            <Text style={styles.helpLine}>4. Six tries. Replay anytime.</Text>
-            <Text style={styles.helpLine}>5. Share your result after each game.</Text>
-            <TouchableOpacity style={styles.helpCloseBtn} onPress={() => setShowHowToPlay(false)}>
-              <Text style={styles.helpCloseText}>GOT IT</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <HowToPlayModal
+        visible={showHowToPlay}
+        onClose={closeHowToPlay}
+        ctaLabel={dailyDone ? 'BACK TO HOME' : 'PLAY THE DAILY'}
+        onPressCta={dailyDone ? undefined : () => navigation.navigate('DailyChallenge')}
+      />
     </LinearGradient>
   );
 }
@@ -420,19 +426,4 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: COLORS.border, alignItems: 'center',
   },
   toolbarBtnText: { color: COLORS.textSecondary, fontSize: 11, fontWeight: '800', letterSpacing: 1.4 },
-
-  // Help modal
-  helpOverlay: { flex: 1, backgroundColor: 'rgba(7,8,24,0.88)', alignItems: 'center', justifyContent: 'center', padding: SPACING.lg },
-  helpCard: {
-    width: '100%', backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg,
-    padding: SPACING.lg, borderWidth: 1, borderColor: COLORS.border, gap: SPACING.sm,
-  },
-  helpTitle: { fontSize: 14, fontWeight: '900', color: COLORS.primary, marginBottom: 4, letterSpacing: 1.4 },
-  helpLine: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 20 },
-  helpCloseBtn: {
-    marginTop: SPACING.sm, alignSelf: 'flex-end',
-    backgroundColor: COLORS.primary, borderRadius: RADIUS.sm,
-    paddingVertical: 10, paddingHorizontal: SPACING.md,
-  },
-  helpCloseText: { color: '#0E1024', fontWeight: '900', letterSpacing: 1, fontSize: 12 },
 });
