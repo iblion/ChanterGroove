@@ -147,6 +147,87 @@ export const MOCK_TRACKS: SpotifyTrack[] = [
   // ─── Extra Drake (2 more → 4 total) ─────────────────────────────────────
   { id: 'dk1',  name: 'Hotline Bling',   artists: ['Drake'],                   album: 'Views',                  albumArt: art(0),  previewUrl: audio(0),  year: 2015, genre: 'hiphop', popularity: 96 },
   { id: 'dk2',  name: 'One Dance',       artists: ['Drake', 'Wizkid'],         album: 'Views',                  albumArt: art(1),  previewUrl: audio(1),  year: 2016, genre: 'hiphop', popularity: 97 },
+
+  // ─── Fuji (10) ──────────────────────────────────────────────────────────
+  // Yoruba percussive Islamic-derived genre pioneered by Sikiru Ayinde Barrister
+  // in late 1960s Lagos; carried forward by KWAM 1, Pasuma, Obesere, Saheed Osupa.
+  { id: 'fj1',  name: 'Fuji Garbage',    artists: ['Sikiru Ayinde Barrister'], album: 'Fuji Garbage',           albumArt: art(2),  previewUrl: audio(2),  year: 1991, genre: 'fuji', popularity: 78 },
+  { id: 'fj2',  name: 'Iwa',             artists: ['Sikiru Ayinde Barrister'], album: 'Iwa',                    albumArt: art(3),  previewUrl: audio(3),  year: 1985, genre: 'fuji', popularity: 75 },
+  { id: 'fj3',  name: 'Fuji Reggae',     artists: ['Sikiru Ayinde Barrister'], album: 'Fuji Reggae',            albumArt: art(4),  previewUrl: audio(4),  year: 1988, genre: 'fuji', popularity: 73 },
+  { id: 'fj4',  name: 'America to Vagas', artists: ['KWAM 1'],                 album: 'America to Vagas',       albumArt: art(5),  previewUrl: audio(5),  year: 1996, genre: 'fuji', popularity: 80 },
+  { id: 'fj5',  name: 'Ka Lo Po Mo',     artists: ['KWAM 1'],                  album: 'Royal Mass',             albumArt: art(6),  previewUrl: audio(6),  year: 1998, genre: 'fuji', popularity: 77 },
+  { id: 'fj6',  name: 'Consolidation',   artists: ['KWAM 1'],                  album: 'Consolidation',          albumArt: art(7),  previewUrl: audio(7),  year: 2003, genre: 'fuji', popularity: 76 },
+  { id: 'fj7',  name: 'Ijo Olomi',       artists: ['Pasuma'],                  album: 'Recognition',            albumArt: art(8),  previewUrl: audio(8),  year: 2002, genre: 'fuji', popularity: 79 },
+  { id: 'fj8',  name: 'Orobokibo',       artists: ['Pasuma'],                  album: 'Orobokibo',              albumArt: art(9),  previewUrl: audio(9),  year: 2017, genre: 'fuji', popularity: 81 },
+  { id: 'fj9',  name: 'Egungun Be Careful', artists: ['Obesere'],              album: 'Asakasa',                albumArt: art(0),  previewUrl: audio(10), year: 2002, genre: 'fuji', popularity: 84 },
+  { id: 'fj10', name: 'Story Continues', artists: ['Saheed Osupa'],            album: 'Saviour',                albumArt: art(1),  previewUrl: audio(11), year: 2010, genre: 'fuji', popularity: 75 },
+  { id: 'fj11', name: 'Mr Money',        artists: ['Sikiru Ayinde Barrister'], album: 'Mr Money',               albumArt: art(2),  previewUrl: audio(12), year: 1990, genre: 'fuji', popularity: 74 },
+  { id: 'fj12', name: 'New Fuji Garbage', artists: ['Sikiru Ayinde Barrister'],album: 'New Fuji Garbage',       albumArt: art(3),  previewUrl: audio(13), year: 1993, genre: 'fuji', popularity: 76 },
+  { id: 'fj13', name: 'Olalomi',         artists: ['KWAM 1'],                  album: 'Olalomi',                albumArt: art(4),  previewUrl: audio(14), year: 2000, genre: 'fuji', popularity: 75 },
+  { id: 'fj14', name: 'E Ko Easy',       artists: ['Pasuma'],                  album: 'E Ko Easy',              albumArt: art(5),  previewUrl: audio(15), year: 2009, genre: 'fuji', popularity: 78 },
+  { id: 'fj15', name: 'Talazo',          artists: ['Adewale Ayuba'],           album: 'Bubble',                 albumArt: art(6),  previewUrl: audio(0),  year: 1992, genre: 'fuji', popularity: 77 },
+
+  // ─── Extra Asake (3 more → 5 total) ─────────────────────────────────────
+  { id: 'as1',  name: 'Lonely At The Top', artists: ['Asake'],                 album: 'Work of Art',            albumArt: art(2),  previewUrl: audio(12), year: 2023, genre: 'afrobeats', popularity: 89 },
+  { id: 'as2',  name: 'Joha',            artists: ['Asake'],                   album: 'Mr Money With the Vibe', albumArt: art(3),  previewUrl: audio(13), year: 2022, genre: 'afrobeats', popularity: 86 },
+  { id: 'as3',  name: 'Sungba',          artists: ['Asake', 'Burna Boy'],      album: 'Mr Money With the Vibe', albumArt: art(4),  previewUrl: audio(14), year: 2022, genre: 'afrobeats', popularity: 90 },
+
+  // ─── Extra Tems (3 more → 5 total) ──────────────────────────────────────
+  { id: 'tm1',  name: 'Higher',          artists: ['Tems'],                    album: 'For Broken Ears',        albumArt: art(5),  previewUrl: audio(15), year: 2020, genre: 'afrobeats', popularity: 86 },
+  { id: 'tm2',  name: 'Crazy Tings',     artists: ['Tems'],                    album: 'If Orange Was a Place',  albumArt: art(6),  previewUrl: audio(0),  year: 2021, genre: 'afrobeats', popularity: 85 },
+  { id: 'tm3',  name: 'Me & U',          artists: ['Tems'],                    album: 'Born In The Wild',       albumArt: art(7),  previewUrl: audio(1),  year: 2024, genre: 'afrobeats', popularity: 88 },
+
+  // ─── Extra Tiwa Savage (3 more → 5 total) ───────────────────────────────
+  { id: 'ts1',  name: 'Somebody\u0027s Son', artists: ['Tiwa Savage', 'Brandy'], album: 'Water & Garri',        albumArt: art(8),  previewUrl: audio(2),  year: 2021, genre: 'afrobeats', popularity: 84 },
+  { id: 'ts2',  name: 'Koroba',          artists: ['Tiwa Savage'],             album: 'Celia',                  albumArt: art(9),  previewUrl: audio(3),  year: 2020, genre: 'afrobeats', popularity: 82 },
+  { id: 'ts3',  name: 'Stamina',         artists: ['Tiwa Savage', 'Ayra Starr', 'Young Jonn'], album: 'Stamina', albumArt: art(0), previewUrl: audio(4), year: 2024, genre: 'afrobeats', popularity: 85 },
+
+  // ─── Extra Ayra Starr (3 more → 5 total) ────────────────────────────────
+  { id: 'ay1',  name: 'Sability',        artists: ['Ayra Starr'],              album: 'The Year I Turned 21',   albumArt: art(1),  previewUrl: audio(5),  year: 2024, genre: 'afrobeats', popularity: 88 },
+  { id: 'ay2',  name: 'Commas',          artists: ['Ayra Starr'],              album: 'The Year I Turned 21',   albumArt: art(2),  previewUrl: audio(6),  year: 2023, genre: 'afrobeats', popularity: 84 },
+  { id: 'ay3',  name: 'Beggie Beggie',   artists: ['Ayra Starr', 'CKay'],      album: '19 & Dangerous',         albumArt: art(3),  previewUrl: audio(7),  year: 2021, genre: 'afrobeats', popularity: 83 },
+
+  // ─── Extra Kizz Daniel (3 more → 5 total) ───────────────────────────────
+  { id: 'kd1',  name: 'Cough (Odo)',     artists: ['Kizz Daniel'],             album: 'Cough',                  albumArt: art(4),  previewUrl: audio(8),  year: 2022, genre: 'afrobeats', popularity: 86 },
+  { id: 'kd2',  name: 'RTID',            artists: ['Kizz Daniel'],             album: 'RTID',                   albumArt: art(5),  previewUrl: audio(9),  year: 2023, genre: 'afrobeats', popularity: 82 },
+  { id: 'kd3',  name: 'Twe Twe',         artists: ['Kizz Daniel'],             album: 'Twe Twe',                albumArt: art(6),  previewUrl: audio(10), year: 2023, genre: 'afrobeats', popularity: 87 },
+
+  // ─── Extra Fireboy DML (3 more → 4 total) ───────────────────────────────
+  { id: 'fb1',  name: 'Bandana',         artists: ['Fireboy DML', 'Asake'],    album: 'Playboy',                albumArt: art(7),  previewUrl: audio(11), year: 2022, genre: 'afrobeats', popularity: 88 },
+  { id: 'fb2',  name: 'Vibration',       artists: ['Fireboy DML'],             album: 'Apollo',                 albumArt: art(8),  previewUrl: audio(12), year: 2020, genre: 'afrobeats', popularity: 81 },
+  { id: 'fb3',  name: 'Playboy',         artists: ['Fireboy DML'],             album: 'Playboy',                albumArt: art(9),  previewUrl: audio(13), year: 2022, genre: 'afrobeats', popularity: 84 },
+
+  // ─── Extra CKay (3 more → 4 total) ──────────────────────────────────────
+  { id: 'ck1',  name: 'Felony',          artists: ['CKay'],                    album: 'Sad Romance',            albumArt: art(0),  previewUrl: audio(14), year: 2022, genre: 'afrobeats', popularity: 80 },
+  { id: 'ck2',  name: 'Emiliana',        artists: ['CKay'],                    album: 'Sad Romance',            albumArt: art(1),  previewUrl: audio(15), year: 2022, genre: 'afrobeats', popularity: 82 },
+  { id: 'ck3',  name: 'Watawi',          artists: ['CKay', 'Davido', 'Focalistic'], album: 'Sad Romance',       albumArt: art(2),  previewUrl: audio(0),  year: 2022, genre: 'afrobeats', popularity: 83 },
+
+  // ─── Joeboy (4) ─────────────────────────────────────────────────────────
+  { id: 'jb1',  name: 'Beginning',       artists: ['Joeboy'],                  album: 'Somewhere Between Beauty & Magic', albumArt: art(3), previewUrl: audio(1), year: 2020, genre: 'afrobeats', popularity: 84 },
+  { id: 'jb2',  name: 'Sip (Alcohol)',   artists: ['Joeboy'],                  album: 'Sip',                    albumArt: art(4),  previewUrl: audio(2),  year: 2021, genre: 'afrobeats', popularity: 85 },
+  { id: 'jb3',  name: 'Baby',            artists: ['Joeboy'],                  album: 'Love & Light',           albumArt: art(5),  previewUrl: audio(3),  year: 2019, genre: 'afrobeats', popularity: 86 },
+  { id: 'jb4',  name: 'Body & Soul',     artists: ['Joeboy'],                  album: 'Body & Soul',            albumArt: art(6),  previewUrl: audio(4),  year: 2023, genre: 'afrobeats', popularity: 80 },
+
+  // ─── Mr Eazi (4) ────────────────────────────────────────────────────────
+  { id: 'me1',  name: 'Pour Me Water',   artists: ['Mr Eazi'],                 album: 'Lagos to London',        albumArt: art(7),  previewUrl: audio(5),  year: 2018, genre: 'afrobeats', popularity: 82 },
+  { id: 'me2',  name: 'Skin Tight',      artists: ['Mr Eazi', 'Efya'],         album: 'Life Is Eazi Vol. 1',    albumArt: art(8),  previewUrl: audio(6),  year: 2017, genre: 'afrobeats', popularity: 80 },
+  { id: 'me3',  name: 'Leg Over',        artists: ['Mr Eazi'],                 album: 'Life Is Eazi Vol. 1',    albumArt: art(9),  previewUrl: audio(7),  year: 2017, genre: 'afrobeats', popularity: 84 },
+  { id: 'me4',  name: 'Tony Montana',    artists: ['Mr Eazi'],                 album: 'Tony Montana',           albumArt: art(0),  previewUrl: audio(8),  year: 2024, genre: 'afrobeats', popularity: 78 },
+
+  // ─── Patoranking (4) ────────────────────────────────────────────────────
+  { id: 'pt1',  name: 'No Kissing Baby', artists: ['Patoranking', 'Sarkodie'], album: 'God Over Everything',    albumArt: art(1),  previewUrl: audio(9),  year: 2016, genre: 'afrobeats', popularity: 82 },
+  { id: 'pt2',  name: 'Abule',           artists: ['Patoranking'],             album: 'Three',                  albumArt: art(2),  previewUrl: audio(10), year: 2020, genre: 'afrobeats', popularity: 83 },
+  { id: 'pt3',  name: 'Available',       artists: ['Patoranking'],             album: 'Wilmer',                 albumArt: art(3),  previewUrl: audio(11), year: 2019, genre: 'afrobeats', popularity: 81 },
+  { id: 'pt4',  name: 'Higher',          artists: ['Patoranking'],             album: 'Higher',                 albumArt: art(4),  previewUrl: audio(12), year: 2024, genre: 'afrobeats', popularity: 79 },
+
+  // ─── 2Baba (4 — Afrobeats legend) ───────────────────────────────────────
+  { id: 'tb1',  name: 'African Queen',   artists: ['2Baba'],                   album: 'Face 2 Face',            albumArt: art(5),  previewUrl: audio(13), year: 2004, genre: 'afrobeats', popularity: 90 },
+  { id: 'tb2',  name: 'Implication',     artists: ['2Baba'],                   album: 'Grass to Grace',         albumArt: art(6),  previewUrl: audio(14), year: 2006, genre: 'afrobeats', popularity: 84 },
+  { id: 'tb3',  name: 'Only Me',         artists: ['2Baba'],                   album: 'The Ascension',          albumArt: art(7),  previewUrl: audio(15), year: 2014, genre: 'afrobeats', popularity: 82 },
+  { id: 'tb4',  name: 'Oyi',             artists: ['2Baba'],                   album: 'Away & Beyond',          albumArt: art(8),  previewUrl: audio(0),  year: 2009, genre: 'afrobeats', popularity: 81 },
+
+  // ─── Extra SZA (1 more → 4 total) ───────────────────────────────────────
+  { id: 'sz1',  name: 'Good Days',       artists: ['SZA'],                     album: 'SOS',                    albumArt: art(9),  previewUrl: audio(1),  year: 2020, genre: 'rnb', popularity: 92 },
 ];
 
 // ─── Get mock tracks with optional genre filter ───────────────────────────

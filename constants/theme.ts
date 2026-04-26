@@ -232,6 +232,7 @@ export const GENRES = [
   { id: 'afrobeats', label: 'Afrobeats', emoji: '🥁', color: '#E36A2C', spotifyGenre: 'afrobeats', featured: true },
   { id: 'afropop',   label: 'Afropop',   emoji: '🌍', color: '#F7935A', spotifyGenre: 'afro-pop',  featured: true },
   { id: 'amapiano',  label: 'Amapiano',  emoji: '🎹', color: '#1F8A55', spotifyGenre: 'amapiano',  featured: true },
+  { id: 'fuji',      label: 'Fuji',      emoji: '🪘', color: '#0F7A4E', spotifyGenre: 'fuji',      featured: true },
   { id: 'hiphop',    label: 'Hip-Hop',   emoji: '🎤', color: '#7A4DDB', spotifyGenre: 'hip-hop',   featured: false },
   { id: 'rap',       label: 'Rap',       emoji: '🔥', color: '#9C5BFF', spotifyGenre: 'rap',       featured: false },
   { id: 'pop',       label: 'Pop',       emoji: '⭐', color: '#D4476B', spotifyGenre: 'pop',       featured: false },
