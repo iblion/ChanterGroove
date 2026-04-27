@@ -70,9 +70,9 @@ export default function HomeScreen({ navigation }: any) {
     setTopScores(scores.slice(0, 3));
 
     const days: ('win' | 'loss' | 'partial' | 'none')[] = [];
-    const today = new Date();
+    const now = new Date();
     for (let i = 13; i >= 0; i--) {
-      const d = new Date(today);
+      const d = new Date(now);
       d.setDate(d.getDate() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const r = dailyMap[key];
