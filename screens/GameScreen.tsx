@@ -709,7 +709,11 @@ function friendlyFallbackNote(raw: string): string {
     return 'No preview clips available — using offline pool.';
   }
   if (raw.startsWith('rate_limited')) {
-    return 'Spotify rate limit hit — using offline pool.';
+    const m = raw.match(/retry_(?:in|after)=(\d+)s/);
+    const secs = m ? Number(m[1]) : 0;
+    return secs > 0
+      ? `Spotify cooling off (${secs}s) — using offline pool.`
+      : 'Spotify rate limit hit — using offline pool.';
   }
   if (raw.startsWith('token_error')) {
     return 'Spotify auth failed — using offline pool.';

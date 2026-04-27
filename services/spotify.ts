@@ -20,6 +20,45 @@ const API_BASE = 'https://api.spotify.com/v1';
 let cachedToken: { token: string; expiresAt: number } | null = null;
 let lastSpotifyError = '';
 
+// ─── Circuit breaker for 429 rate limits ──────────────────────────────────
+// When Spotify returns 429, every subsequent request keeps the cooldown
+// alive. Track when we got rate-limited and skip Spotify entirely until
+// the cooldown expires. The cooldown is set from the `Retry-After` header
+// when present, otherwise a sane default.
+const DEFAULT_RATE_LIMIT_COOLDOWN_MS = 60_000;
+let rateLimitedUntil = 0;
+
+function isRateLimitCooldownActive(): { active: boolean; remainingMs: number } {
+  const remainingMs = Math.max(0, rateLimitedUntil - Date.now());
+  return { active: remainingMs > 0, remainingMs };
+}
+
+function tripRateLimitCooldown(retryAfterSeconds: number) {
+  const ms =
+    retryAfterSeconds && retryAfterSeconds > 0
+      ? retryAfterSeconds * 1000
+      : DEFAULT_RATE_LIMIT_COOLDOWN_MS;
+  // Always extend, never shorten — pick the latest expiry.
+  rateLimitedUntil = Math.max(rateLimitedUntil, Date.now() + ms);
+}
+
+// ─── In-memory result cache ───────────────────────────────────────────────
+// Cache successful track-fetch results so repeated game starts with the
+// same filter don't keep hammering Spotify (and don't burn rate-limit
+// budget). Keyed by genre|artist|decade|limit, expires after 5 minutes.
+const RESULT_CACHE_TTL_MS = 5 * 60 * 1000;
+const resultCache = new Map<string, { at: number; result: TrackFetchResult }>();
+
+function cacheKeyFor(
+  genre: string,
+  artist: string,
+  decadeStart: number | undefined,
+  decadeEnd: number | undefined,
+  limit: number
+): string {
+  return `${genre}|${artist}|${decadeStart || 0}-${decadeEnd || 0}|${limit}`;
+}
+
 export interface SpotifyTrack {
   id: string;
   name: string;
@@ -111,7 +150,6 @@ export async function fetchTracksForGameDetailed(options: {
   decadeEnd?: number;
   limit?: number;
 }): Promise<TrackFetchResult> {
-  const token = await getAccessToken();
   const { genre = 'afrobeats', artist, decadeStart, decadeEnd, limit = 20 } = options;
   const requestedLimit = Number.isFinite(limit) ? Math.floor(limit) : 20;
   const safeLimit = Math.min(50, Math.max(1, requestedLimit));
@@ -120,6 +158,36 @@ export async function fetchTracksForGameDetailed(options: {
   const safeArtist = (artist || '').trim();
   const safeDecadeStart = Number.isFinite(decadeStart) ? Number(decadeStart) : undefined;
   const safeDecadeEnd = Number.isFinite(decadeEnd) ? Number(decadeEnd) : undefined;
+
+  // Short-circuit: if we recently got rate-limited, don't even try to call
+  // Spotify. Each call while throttled refreshes the cooldown, so this is
+  // critical to actually let Spotify recover.
+  const cooldown = isRateLimitCooldownActive();
+  if (cooldown.active) {
+    lastSpotifyError = `rate_limited retry_in=${Math.ceil(cooldown.remainingMs / 1000)}s`;
+    // eslint-disable-next-line no-console
+    console.log(
+      `[Spotify Debug] skipping live source — circuit breaker active for ${Math.ceil(cooldown.remainingMs / 1000)}s more`
+    );
+    return {
+      tracks: [],
+      source: 'fallback',
+      spotifyPreviewCount: 0,
+      itunesPreviewCount: 0,
+    };
+  }
+
+  // Return cached result if we have a fresh one for the same filter combo.
+  const cacheKey = cacheKeyFor(safeGenre, safeArtist, safeDecadeStart, safeDecadeEnd, safeLimit);
+  const cached = resultCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < RESULT_CACHE_TTL_MS) {
+    // eslint-disable-next-line no-console
+    console.log(`[Spotify Debug] cache hit for ${cacheKey} — ${cached.result.tracks.length} tracks`);
+    lastSpotifyError = '';
+    return cached.result;
+  }
+
+  const token = await getAccessToken();
   const yearFilter =
     safeDecadeStart && safeDecadeEnd ? ` year:${safeDecadeStart}-${safeDecadeEnd}` : '';
   const queries = safeArtist
@@ -164,7 +232,10 @@ export async function fetchTracksForGameDetailed(options: {
 
       if (res.status === 429) {
         const retryAfter = Number(res.headers.get('Retry-After')) || 0;
-        lastSpotifyError = `rate_limited retry_after=${retryAfter}s`;
+        tripRateLimitCooldown(retryAfter);
+        lastSpotifyError = `rate_limited retry_after=${
+          retryAfter || Math.ceil(DEFAULT_RATE_LIMIT_COOLDOWN_MS / 1000)
+        }s`;
         rateLimited = true;
         break outer;
       }
@@ -257,12 +328,19 @@ export async function fetchTracksForGameDetailed(options: {
     lastSpotifyError = '';
   }
 
-  return {
+  const result: TrackFetchResult = {
     tracks: shuffleArray(mixed).slice(0, safeLimit),
     source: itunesPreviewCount > 0 ? 'mixed_live' : 'spotify_live',
     spotifyPreviewCount,
     itunesPreviewCount,
   };
+
+  // Cache successful results so retries don't re-hit Spotify needlessly.
+  if (result.tracks.length > 0) {
+    resultCache.set(cacheKey, { at: Date.now(), result });
+  }
+
+  return result;
 }
 
 export function getSpotifyLastError(): string {
