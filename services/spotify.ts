@@ -144,6 +144,10 @@ export async function fetchTracksForGameDetailed(options: {
   // fall back to the offline pool instead of crashing.
   let rateLimited = false;
   outer: for (const query of queries) {
+    // If the search query itself uses Spotify's `genre:` operator, we can
+    // trust Spotify's pre-filtering as a fallback when /artists is throttled
+    // or returns sparse genre data.
+    const usedGenreSearch = /\bgenre:/i.test(query);
     for (let page = 0; page < 3 && deduped.size < safeLimit; page++) {
       const params = new URLSearchParams({
         q: query.replace(/\s+/g, ' ').trim(),
@@ -198,7 +202,17 @@ export async function fetchTracksForGameDetailed(options: {
           artistGenres: artistGenreMap[primaryArtistId] || [],
           popularity: t.popularity,
         };
-        if (!passesFilters(mappedTrack, safeGenre, safeArtist, safeDecadeStart, safeDecadeEnd)) continue;
+        if (
+          !passesFilters(
+            mappedTrack,
+            safeGenre,
+            safeArtist,
+            safeDecadeStart,
+            safeDecadeEnd,
+            { trustGenreSearch: usedGenreSearch }
+          )
+        )
+          continue;
         deduped.set(t.id, mappedTrack);
       }
     }
@@ -368,16 +382,27 @@ function passesFilters(
   genre?: string,
   artist?: string,
   decadeStart?: number,
-  decadeEnd?: number
+  decadeEnd?: number,
+  opts: { trustGenreSearch?: boolean } = {}
 ): boolean {
   if (genre && !artist) {
     // In strict genre mode, require Spotify artist-genre confirmation.
-    // If genre metadata is missing, reject to prevent cross-genre leakage.
+    // If genre metadata is missing, reject to prevent cross-genre leakage —
+    // UNLESS the search itself used the `genre:` operator, in which case we
+    // can trust Spotify's pre-filtering (used as a graceful fallback when
+    // /artists genre lookups are rate-limited or sparse).
     const genres = track.artistGenres || [];
     if (genres.length === 0) {
-      if (!passesArtistAllowlistFallback(track, genre)) return false;
+      if (opts.trustGenreSearch) {
+        // Trust Spotify's genre: search filter and accept.
+      } else if (!passesArtistAllowlistFallback(track, genre)) {
+        return false;
+      }
     } else if (!matchesGenre(genres, genre)) {
-      return false;
+      // Even with mismatched genre tags, accept if the artist is on our
+      // curated allowlist (handles afrobeat mainstays Spotify tags as
+      // "afropop" or "naija pop", etc.)
+      if (!passesArtistAllowlistFallback(track, genre)) return false;
     }
   }
   if (artist) {
@@ -492,14 +517,23 @@ async function fetchArtistGenres(
   }
   for (const chunk of chunks) {
     const url = `${API_BASE}/artists?ids=${chunk.join(',')}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) continue;
-    const data = await res.json();
-    const artists = data?.artists || [];
-    for (const artist of artists) {
-      out[artist.id] = Array.isArray(artist.genres) ? artist.genres : [];
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 429) {
+        // Throttled — bail out of remaining chunks. Caller will fall back
+        // to the genre-search-trust path or allowlist filter.
+        break;
+      }
+      if (!res.ok) continue;
+      const data = await res.json();
+      const artists = data?.artists || [];
+      for (const artist of artists) {
+        out[artist.id] = Array.isArray(artist.genres) ? artist.genres : [];
+      }
+    } catch {
+      continue;
     }
   }
   return out;
