@@ -143,6 +143,8 @@ export async function fetchTracksForGameDetailed(options: {
   // and bail out of the live source rather than throwing, so the caller can
   // fall back to the offline pool instead of crashing.
   let rateLimited = false;
+  let totalItemsReturned = 0;
+  let totalItemsRejected = 0;
   outer: for (const query of queries) {
     // If the search query itself uses Spotify's `genre:` operator, we can
     // trust Spotify's pre-filtering as a fallback when /artists is throttled
@@ -178,6 +180,7 @@ export async function fetchTracksForGameDetailed(options: {
       const data = await res.json();
       const items = data?.tracks?.items || [];
       if (items.length === 0) break; // no more results for this query
+      totalItemsReturned += items.length;
 
       const artistIds = Array.from(
         new Set(
@@ -211,15 +214,27 @@ export async function fetchTracksForGameDetailed(options: {
             safeDecadeEnd,
             { trustGenreSearch: usedGenreSearch }
           )
-        )
+        ) {
+          totalItemsRejected++;
           continue;
+        }
         deduped.set(t.id, mappedTrack);
       }
     }
     if (rateLimited) break;
   }
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `[Spotify Debug] fetch summary: returned=${totalItemsReturned} rejected=${totalItemsRejected} accepted=${deduped.size} rateLimited=${rateLimited} q="${queries[0]}"`
+  );
+
   if (deduped.size === 0) {
-    lastSpotifyError = 'no_spotify_tracks_found';
+    // Preserve the more specific error if one was set (rate_limited,
+    // search_error). Only fall back to the generic message if nothing else.
+    if (!lastSpotifyError || lastSpotifyError === '') {
+      lastSpotifyError = 'no_spotify_tracks_found';
+    }
     return {
       tracks: [],
       source: 'fallback',
