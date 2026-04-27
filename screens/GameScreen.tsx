@@ -708,6 +708,9 @@ function friendlyFallbackNote(raw: string): string {
   if (raw.startsWith('no_preview_tracks_found')) {
     return 'No preview clips available — using offline pool.';
   }
+  if (raw.startsWith('rate_limited')) {
+    return 'Spotify rate limit hit — using offline pool.';
+  }
   if (raw.startsWith('token_error')) {
     return 'Spotify auth failed — using offline pool.';
   }

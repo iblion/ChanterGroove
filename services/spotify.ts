@@ -136,26 +136,45 @@ export async function fetchTracksForGameDetailed(options: {
         // (e.g. K-pop, country) when artist genre metadata was sparse.
       ];
 
-  for (const query of queries) {
-    for (let i = 0; i < 3 && deduped.size < safeLimit; i++) {
+  // Paginate properly across queries. Each iteration of the inner loop
+  // advances the `offset` so we don't re-fetch the same page (which previously
+  // triple-counted against Spotify's rate limit for identical results).
+  // Also: 429 responses are now handled gracefully — we honor `Retry-After`
+  // and bail out of the live source rather than throwing, so the caller can
+  // fall back to the offline pool instead of crashing.
+  let rateLimited = false;
+  outer: for (const query of queries) {
+    for (let page = 0; page < 3 && deduped.size < safeLimit; page++) {
       const params = new URLSearchParams({
         q: query.replace(/\s+/g, ' ').trim(),
         type: 'track',
-        // Do not force market to improve preview_url availability across regions.
+        limit: '50',
+        offset: String(page * 50),
       });
       const url = `${API_BASE}/search?${params.toString()}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      if (res.status === 429) {
+        const retryAfter = Number(res.headers.get('Retry-After')) || 0;
+        lastSpotifyError = `rate_limited retry_after=${retryAfter}s`;
+        rateLimited = true;
+        break outer;
+      }
+
       if (!res.ok) {
         const msg = await res.text();
         lastSpotifyError = `search_error url="${url}" q="${query}": ${msg}`;
-        throw new Error(lastSpotifyError);
+        // Don't throw — try the next query. Many "errors" are 400s for
+        // genre tags Spotify doesn't recognize; the next query may succeed.
+        break;
       }
 
       const data = await res.json();
       const items = data?.tracks?.items || [];
+      if (items.length === 0) break; // no more results for this query
+
       const artistIds = Array.from(
         new Set(
           items
@@ -183,6 +202,7 @@ export async function fetchTracksForGameDetailed(options: {
         deduped.set(t.id, mappedTrack);
       }
     }
+    if (rateLimited) break;
   }
   if (deduped.size === 0) {
     lastSpotifyError = 'no_spotify_tracks_found';
