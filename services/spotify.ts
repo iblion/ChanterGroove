@@ -197,12 +197,7 @@ export async function fetchTracksForGameDetailed(options: {
         `artist:${safeArtist}`,
         safeArtist,
       ]
-    : [
-        `genre:${safeGenre}${yearFilter}`,
-        `${safeGenre}${yearFilter}`,
-        // Removed the bare year-range query — it leaked unrelated genres
-        // (e.g. K-pop, country) when artist genre metadata was sparse.
-      ];
+    : buildGenreSearchQueries(safeGenre, safeDecadeStart, safeDecadeEnd, yearFilter);
 
   // Paginate properly across queries. Each iteration of the inner loop
   // advances the `offset` so we don't re-fetch the same page (which previously
@@ -217,13 +212,14 @@ export async function fetchTracksForGameDetailed(options: {
     // If the search query itself uses Spotify's `genre:` operator, we can
     // trust Spotify's pre-filtering as a fallback when /artists is throttled
     // or returns sparse genre data.
-    const usedGenreSearch = /\bgenre:/i.test(query);
+    const usedGenreSearch = shouldTrustGenreQuery(query, safeGenre);
     for (let page = 0; page < 3 && deduped.size < safeLimit; page++) {
       const params = new URLSearchParams({
         q: query.replace(/\s+/g, ' ').trim(),
         type: 'track',
         limit: '50',
         offset: String(page * 50),
+        market: 'US',
       });
       const url = `${API_BASE}/search?${params.toString()}`;
       const res = await fetch(url, {
@@ -243,7 +239,11 @@ export async function fetchTracksForGameDetailed(options: {
       if (!res.ok) {
         const msg = await res.text();
         lastSpotifyError = `search_error url="${url}" q="${query}": ${msg}`;
-        // Don't throw — try the next query. Many "errors" are 400s for
+        // eslint-disable-next-line no-console
+        console.log(
+          `[Spotify Debug] search_http_${res.status} q="${query.slice(0, 80)}..."`
+        );
+        // Don't throw — try the next query. Many errors are 400s for
         // genre tags Spotify doesn't recognize; the next query may succeed.
         break;
       }
@@ -292,12 +292,13 @@ export async function fetchTracksForGameDetailed(options: {
         deduped.set(t.id, mappedTrack);
       }
     }
+    if (deduped.size >= safeLimit) break outer;
     if (rateLimited) break;
   }
 
   // eslint-disable-next-line no-console
   console.log(
-    `[Spotify Debug] fetch summary: returned=${totalItemsReturned} rejected=${totalItemsRejected} accepted=${deduped.size} rateLimited=${rateLimited} q="${queries[0]}"`
+    `[Spotify Debug] fetch summary: returned=${totalItemsReturned} rejected=${totalItemsRejected} accepted=${deduped.size} rateLimited=${rateLimited} first_q="${queries[0]}" query_steps=${queries.length}`
   );
 
   if (deduped.size === 0) {
@@ -381,6 +382,73 @@ export function generateChoices(correct: SpotifyTrack, pool: SpotifyTrack[]): Sp
 }
 
 // ─── Utils ─────────────────────────────────────────────────────────────────
+
+/** Alternate Spotify search tokens when strict genre+year returns zero hits via Web API. */
+const GENRE_SEARCH_ALTERNATES: Record<string, string[]> = {
+  afrobeats: ['afrobeat'],
+  afropop: ['afro-pop'],
+  amapiano: ['south african amapiano'],
+  fuji: ['yoruba fuji'],
+  highlife: ['ghana highlife'],
+};
+
+function alternateTagsForSlug(safeGenre: string): string[] {
+  const g = safeGenre.toLowerCase();
+  if (GENRE_SEARCH_ALTERNATES[g]) return GENRE_SEARCH_ALTERNATES[g];
+  const compact = g.replace(/-/g, '');
+  return GENRE_SEARCH_ALTERNATES[compact] || [];
+}
+
+function uniqSearchQueries(parts: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of parts) {
+    const q = raw.replace(/\s+/g, ' ').trim();
+    const key = q.toLowerCase();
+    if (!q || seen.has(key)) continue;
+    seen.add(key);
+    out.push(q);
+  }
+  return out;
+}
+
+/**
+ * Narrow Spotify-side genre+year searches often return **zero** hits from the Web API
+ * even though broader queries work. Try narrow first, then broad keyword/genre queries;
+ * decade bounds are still enforced in passesFilters().
+ */
+function buildGenreSearchQueries(
+  safeGenre: string,
+  decadeStart: number | undefined,
+  decadeEnd: number | undefined,
+  yearFilter: string
+): string[] {
+  const narrow =
+    decadeStart && decadeEnd
+      ? [`genre:${safeGenre}${yearFilter}`, `${safeGenre}${yearFilter}`]
+      : [];
+
+  const broadCore = [`genre:${safeGenre}`, `${safeGenre}`];
+
+  const alternateTags = alternateTagsForSlug(safeGenre);
+  const alternateBroad = alternateTags.flatMap((tag) => [`genre:${tag}`, tag]);
+
+  return uniqSearchQueries([...narrow, ...broadCore, ...alternateBroad]);
+}
+
+/** Trust Spotify results when our query is explicitly genre-scoped OR our curated keyword/alternate token (decade still enforced in passesFilters). */
+function shouldTrustGenreQuery(query: string, safeGenre: string): boolean {
+  if (/\bgenre:/i.test(query)) return true;
+  const q = query.replace(/\s+/g, ' ').trim().toLowerCase();
+  const g = safeGenre.toLowerCase();
+  if (q === g || q.startsWith(`${g} year:`)) return true;
+  const alts = alternateTagsForSlug(safeGenre);
+  return alts.some((tag) => {
+    const t = tag.toLowerCase();
+    return q === t || q.startsWith(`${t} year:`);
+  });
+}
+
 function shuffleArray<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
