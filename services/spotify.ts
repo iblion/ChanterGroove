@@ -17,6 +17,11 @@ const CLIENT_SECRET =
 const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const API_BASE = 'https://api.spotify.com/v1';
 
+/** Spotify Search GET /search caps `limit` at **10** per type — sending e.g. 50 yields HTTP 400. */
+const SPOTIFY_SEARCH_PAGE_SIZE = 10;
+/** Enough pages to match prior intent (~50 candidate tracks per query string before filtering). */
+const SPOTIFY_SEARCH_MAX_PAGES = 5;
+
 let cachedToken: { token: string; expiresAt: number } | null = null;
 let lastSpotifyError = '';
 
@@ -213,12 +218,12 @@ export async function fetchTracksForGameDetailed(options: {
     // trust Spotify's pre-filtering as a fallback when /artists is throttled
     // or returns sparse genre data.
     const usedGenreSearch = shouldTrustGenreQuery(query, safeGenre);
-    for (let page = 0; page < 3 && deduped.size < safeLimit; page++) {
+    for (let page = 0; page < SPOTIFY_SEARCH_MAX_PAGES && deduped.size < safeLimit; page++) {
       const params = new URLSearchParams({
         q: query.replace(/\s+/g, ' ').trim(),
         type: 'track',
-        limit: '50',
-        offset: String(page * 50),
+        limit: String(SPOTIFY_SEARCH_PAGE_SIZE),
+        offset: String(page * SPOTIFY_SEARCH_PAGE_SIZE),
         market: 'US',
       });
       const url = `${API_BASE}/search?${params.toString()}`;
@@ -241,7 +246,7 @@ export async function fetchTracksForGameDetailed(options: {
         lastSpotifyError = `search_error url="${url}" q="${query}": ${msg}`;
         // eslint-disable-next-line no-console
         console.log(
-          `[Spotify Debug] search_http_${res.status} q="${query.slice(0, 80)}..."`
+          `[Spotify Debug] search_http_${res.status} q="${query.slice(0, 80)}..." body=${msg.slice(0, 200)}`
         );
         // Don't throw — try the next query. Many errors are 400s for
         // genre tags Spotify doesn't recognize; the next query may succeed.
