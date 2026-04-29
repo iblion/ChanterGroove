@@ -22,6 +22,9 @@ const SPOTIFY_SEARCH_PAGE_SIZE = 10;
 /** Enough pages to match prior intent (~50 candidate tracks per query string before filtering). */
 const SPOTIFY_SEARCH_MAX_PAGES = 5;
 
+/** Genres where naked keyword search pulls junk (e.g. “fuji” ≠ Fuji music). Only `genre:` queries + strict filters. */
+const STRICT_KEYWORD_GENRES = new Set(['fuji']);
+
 let cachedToken: { token: string; expiresAt: number } | null = null;
 let lastSpotifyError = '';
 
@@ -321,7 +324,7 @@ export async function fetchTracksForGameDetailed(options: {
   }
 
   const mixed = await fillMissingPreviews(
-    Array.from(deduped.values()),
+    prioritizeSpotifyNativePreviews(Array.from(deduped.values())),
     safeLimit,
     safeGenre,
     safeArtist
@@ -428,6 +431,17 @@ function buildGenreSearchQueries(
   decadeEnd: number | undefined,
   yearFilter: string
 ): string[] {
+  const alternateTags = alternateTagsForSlug(safeGenre);
+
+  // Fuji (and similar): only field-scoped queries — naked keywords match unrelated titles/artists.
+  if (STRICT_KEYWORD_GENRES.has(safeGenre)) {
+    const narrow =
+      decadeStart && decadeEnd ? [`genre:${safeGenre}${yearFilter}`] : [];
+    const broadCore = [`genre:${safeGenre}`];
+    const alternateBroad = alternateTags.flatMap((tag) => [`genre:${tag}`]);
+    return uniqSearchQueries([...narrow, ...broadCore, ...alternateBroad]);
+  }
+
   const narrow =
     decadeStart && decadeEnd
       ? [`genre:${safeGenre}${yearFilter}`, `${safeGenre}${yearFilter}`]
@@ -435,7 +449,6 @@ function buildGenreSearchQueries(
 
   const broadCore = [`genre:${safeGenre}`, `${safeGenre}`];
 
-  const alternateTags = alternateTagsForSlug(safeGenre);
   const alternateBroad = alternateTags.flatMap((tag) => [`genre:${tag}`, tag]);
 
   return uniqSearchQueries([...narrow, ...broadCore, ...alternateBroad]);
@@ -443,6 +456,9 @@ function buildGenreSearchQueries(
 
 /** Trust Spotify results when our query is explicitly genre-scoped OR our curated keyword/alternate token (decade still enforced in passesFilters). */
 function shouldTrustGenreQuery(query: string, safeGenre: string): boolean {
+  if (STRICT_KEYWORD_GENRES.has(safeGenre)) {
+    return /\bgenre:/i.test(query);
+  }
   if (/\bgenre:/i.test(query)) return true;
   const q = query.replace(/\s+/g, ' ').trim().toLowerCase();
   const g = safeGenre.toLowerCase();
@@ -509,13 +525,21 @@ export async function enrichTracksWithItunesPreviews(
   return out;
 }
 
+/** Prefer tracks that already have a Spotify 30s preview so clips match catalog IDs; others fall back to iTunes lookup. */
+function prioritizeSpotifyNativePreviews(tracks: SpotifyTrack[]): SpotifyTrack[] {
+  const pool = shuffleArray(tracks);
+  const withSpotify = pool.filter((t) => !!t.previewUrl);
+  const needItunes = pool.filter((t) => !t.previewUrl);
+  return [...withSpotify, ...needItunes];
+}
+
 async function fillMissingPreviews(
   tracks: SpotifyTrack[],
   limit: number,
   genre?: string,
   artist?: string
 ): Promise<SpotifyTrack[]> {
-  const selected = shuffleArray(tracks).slice(0, Math.max(limit * 2, 25));
+  const selected = prioritizeSpotifyNativePreviews(shuffleArray(tracks)).slice(0, Math.max(limit * 2, 25));
   const output: SpotifyTrack[] = [];
 
   for (const track of selected) {
@@ -527,7 +551,8 @@ async function fillMissingPreviews(
     }
 
     const itunesPreview = await findItunesPreviewUrl(track.name, track.artists[0], {
-      requireArtistMatch: !!artist,
+      // Always require artist overlap — genre-only mode used to allow loose iTunes matches (wrong song).
+      requireArtistMatch: true,
       requireTrackMatch: true,
     });
     if (itunesPreview) {
@@ -552,22 +577,25 @@ function passesFilters(
   opts: { trustGenreSearch?: boolean } = {}
 ): boolean {
   if (genre && !artist) {
-    // In strict genre mode, require Spotify artist-genre confirmation.
-    // If genre metadata is missing, reject to prevent cross-genre leakage —
-    // UNLESS the search itself used the `genre:` operator, in which case we
-    // can trust Spotify's pre-filtering (used as a graceful fallback when
-    // /artists genre lookups are rate-limited or sparse).
     const genres = track.artistGenres || [];
-    if (genres.length === 0) {
+    const strictKeywordGenre =
+      genre && STRICT_KEYWORD_GENRES.has(String(genre).toLowerCase());
+
+    // Thin / polluted genres (e.g. Fuji): never accept empty artist-genre rows
+    // purely because the search string contained `genre:` — keyword hits still slip through.
+    if (strictKeywordGenre) {
+      if (genres.length === 0) {
+        if (!passesArtistAllowlistFallback(track, genre)) return false;
+      } else if (!matchesGenre(genres, genre)) {
+        if (!passesArtistAllowlistFallback(track, genre)) return false;
+      }
+    } else if (genres.length === 0) {
       if (opts.trustGenreSearch) {
-        // Trust Spotify's genre: search filter and accept.
+        // Trust Spotify search pre-filter when metadata missing (non-strict genres).
       } else if (!passesArtistAllowlistFallback(track, genre)) {
         return false;
       }
     } else if (!matchesGenre(genres, genre)) {
-      // Even with mismatched genre tags, accept if the artist is on our
-      // curated allowlist (handles afrobeat mainstays Spotify tags as
-      // "afropop" or "naija pop", etc.)
       if (!passesArtistAllowlistFallback(track, genre)) return false;
     }
   }
@@ -595,7 +623,8 @@ function matchesGenre(artistGenres: string[], wantedGenre: string): boolean {
     dancehall: ['dancehall'],
     rock: ['rock'],
     jazz: ['jazz'],
-    fuji: ['fuji', 'yoruba', 'apala', 'were'],
+    // Avoid bare "yoruba" — it matches almost all Nigerian acts, not Fuji specifically.
+    fuji: ['fuji', 'apala', 'were', 'islamic', 'ajisari'],
     highlife: ['highlife', 'palm wine', 'afrobeat', 'ghanaian'],
     juju: ['juju', 'yoruba', 'afrobeat'],
     gospel: ['gospel', 'worship', 'christian', 'praise'],
@@ -632,8 +661,27 @@ function passesArtistAllowlistFallback(track: SpotifyTrack, genre: string): bool
       'mellow & sleazy', 'tyler icu',
     ],
     fuji: [
-      'sikiru ayinde barrister', 'kwam 1', 'pasuma', 'wasiu alabi pasuma',
-      'obesere', 'saheed osupa', 'adewale ayuba', 'sule alao malaika',
+      'sikiru ayinde barrister',
+      'ayinde barrister',
+      'kwam 1',
+      'wasiu ayinde',
+      'king wasiu ayinde',
+      'pasuma',
+      'wasiu alabi pasuma',
+      'obesere',
+      'saheed osupa',
+      'adewale ayuba',
+      'sule alao malaika',
+      'sule alao',
+      'malaika',
+      'muri thunder',
+      'kollington ayinla',
+      'general ayinla',
+      'remi aluko',
+      'shefiu alao',
+      'dele taiwo',
+      'taye currency',
+      'abass akande',
     ],
     highlife: [
       'flavour', 'phyno', 'sir victor uwaifo', 'osibisa', 'prince nico mbarga',
