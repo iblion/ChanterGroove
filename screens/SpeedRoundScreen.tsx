@@ -64,7 +64,7 @@ export default function SpeedRoundScreen({ navigation }: any) {
           setTracks(playable);
           setSource(result.source);
           setSourceNote(
-            `${result.spotifyPreviewCount} Spotify · ${result.itunesPreviewCount} iTunes`
+            `${result.spotifyPreviewCount} Spotify · ${result.itunesPreviewCount} iTunes · ${result.audiomackPreviewCount} Audiomack`
           );
           return;
         }

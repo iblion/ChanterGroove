@@ -1,4 +1,5 @@
 import { findItunesPreviewUrl } from './itunes';
+import { findAudiomackPreviewUrl } from './audiomack';
 
 // ─── Spotify Service ───────────────────────────────────────────────────────
 // Uses Spotify Client Credentials flow (no user login needed for previews)
@@ -78,7 +79,7 @@ export interface SpotifyTrack {
   genre?: string;
   artistGenres?: string[];
   popularity: number;
-  audioSource?: 'spotify' | 'itunes';
+  audioSource?: 'spotify' | 'itunes' | 'audiomack';
 }
 
 export interface TrackFetchResult {
@@ -86,6 +87,7 @@ export interface TrackFetchResult {
   source: 'spotify_live' | 'mixed_live' | 'fallback';
   spotifyPreviewCount: number;
   itunesPreviewCount: number;
+  audiomackPreviewCount: number;
 }
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
@@ -182,6 +184,7 @@ export async function fetchTracksForGameDetailed(options: {
       source: 'fallback',
       spotifyPreviewCount: 0,
       itunesPreviewCount: 0,
+      audiomackPreviewCount: 0,
     };
   }
 
@@ -320,6 +323,7 @@ export async function fetchTracksForGameDetailed(options: {
       source: 'fallback',
       spotifyPreviewCount: 0,
       itunesPreviewCount: 0,
+      audiomackPreviewCount: 0,
     };
   }
 
@@ -331,6 +335,7 @@ export async function fetchTracksForGameDetailed(options: {
   );
   const spotifyPreviewCount = mixed.filter((t) => t.audioSource === 'spotify').length;
   const itunesPreviewCount = mixed.filter((t) => t.audioSource === 'itunes').length;
+  const audiomackPreviewCount = mixed.filter((t) => t.audioSource === 'audiomack').length;
   if (mixed.length === 0) {
     lastSpotifyError = 'no_preview_tracks_found';
   } else {
@@ -339,9 +344,11 @@ export async function fetchTracksForGameDetailed(options: {
 
   const result: TrackFetchResult = {
     tracks: shuffleArray(mixed).slice(0, safeLimit),
-    source: itunesPreviewCount > 0 ? 'mixed_live' : 'spotify_live',
+    source:
+      itunesPreviewCount > 0 || audiomackPreviewCount > 0 ? 'mixed_live' : 'spotify_live',
     spotifyPreviewCount,
     itunesPreviewCount,
+    audiomackPreviewCount,
   };
 
   // Cache successful results so retries don't re-hit Spotify needlessly.
@@ -562,6 +569,24 @@ async function fillMissingPreviews(
         previewUrl: itunesPreview,
         audioSource: 'itunes',
       });
+      continue;
+    }
+
+    try {
+      const audiomackPreview = await findAudiomackPreviewUrl(track.name, track.artists[0], {
+        requireArtistMatch: true,
+        requireTrackMatch: true,
+      });
+      if (audiomackPreview) {
+        output.push({
+          ...track,
+          genre: track.genre || genre,
+          previewUrl: audiomackPreview,
+          audioSource: 'audiomack',
+        });
+      }
+    } catch {
+      /* Audiomack is optional — ignore */
     }
   }
 

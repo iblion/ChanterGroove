@@ -38,7 +38,11 @@ export default function GameScreen({ navigation, route }: any) {
   const { genre, decade, difficulty, mode, artistFilter, roomId, userId } = route.params;
   const [tracks, setTracks]           = useState<SpotifyTrack[]>([]);
   const [spotifyTrackCount, setSpotifyTrackCount] = useState(0);
-  const [spotifyAudioBreakdown, setSpotifyAudioBreakdown] = useState({ spotify: 0, itunes: 0 });
+  const [spotifyAudioBreakdown, setSpotifyAudioBreakdown] = useState({
+    spotify: 0,
+    itunes: 0,
+    audiomack: 0,
+  });
   const [spotifyStatusNote, setSpotifyStatusNote] = useState('');
   const [usingFallbackPool, setUsingFallbackPool] = useState(false);
   const [round, setRound]             = useState(0);
@@ -89,6 +93,7 @@ export default function GameScreen({ navigation, route }: any) {
         setSpotifyAudioBreakdown({
           spotify: fetchResult.spotifyPreviewCount,
           itunes: fetchResult.itunesPreviewCount,
+          audiomack: fetchResult.audiomackPreviewCount,
         });
         setSpotifyStatusNote(
           spotifyTracks.length > 0
@@ -124,7 +129,7 @@ export default function GameScreen({ navigation, route }: any) {
       } catch (error) {
         if (!mounted) return;
         setSpotifyTrackCount(0);
-        setSpotifyAudioBreakdown({ spotify: 0, itunes: 0 });
+        setSpotifyAudioBreakdown({ spotify: 0, itunes: 0, audiomack: 0 });
         const detailedError = getSpotifyLastError() || (error instanceof Error ? error.message : 'spotify request failed');
         console.warn('[Spotify Debug]', detailedError);
         setSpotifyStatusNote(detailedError);
@@ -367,7 +372,7 @@ export default function GameScreen({ navigation, route }: any) {
   const isSpotifyLive = spotifyTrackCount > 0 && !usingFallbackPool;
   const sourceLabel = isSpotifyLive ? `Spotify Live (${spotifyTrackCount})` : 'Fallback Tracks';
   const sourceDetail = isSpotifyLive
-    ? `${spotifyAudioBreakdown.spotify} Spotify · ${spotifyAudioBreakdown.itunes} iTunes`
+    ? `${spotifyAudioBreakdown.spotify} Spotify · ${spotifyAudioBreakdown.itunes} iTunes · ${spotifyAudioBreakdown.audiomack} Audiomack`
     : spotifyStatusNote;
 
   return (
@@ -516,7 +521,7 @@ export default function GameScreen({ navigation, route }: any) {
         <View style={styles.debugPanel}>
           <Text style={styles.panelTitle}>SOURCE / DEBUG</Text>
           <DebugRow k="Source"          v={sourceLabel} />
-          <DebugRow k="Audio Mix"       v={`${spotifyAudioBreakdown.spotify} Spotify · ${spotifyAudioBreakdown.itunes} iTunes`} />
+          <DebugRow k="Audio Mix"       v={`${spotifyAudioBreakdown.spotify} Spotify · ${spotifyAudioBreakdown.itunes} iTunes · ${spotifyAudioBreakdown.audiomack} Audiomack`} />
           <DebugRow k="Genre"           v={genre?.label || genre?.id || '—'} />
           <DebugRow k="Decade"          v={decade?.label || decade?.id || 'Any'} />
           <DebugRow k="Difficulty"      v={difficulty?.label || difficulty?.id || '—'} />
